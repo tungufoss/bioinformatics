@@ -13,39 +13,80 @@ def BinaryStrings(k):
   import itertools
   return ["".join(seq) for seq in itertools.product("01", repeat=k)]
 
-def ReadKmers(inFile):
+def ReadKmers(inputFile):
   kmers = []
-  with open(inFile,'r') as inputFile:
-    k = inputFile.readline().strip()    
-    for line in inputFile:
+  with open(inputFile,'r') as inFile:
+    k = inFile.readline().strip()    
+    for line in inFile:
       line = line.strip()
       kmers.append(line)
   return k,kmers
 
-def DeBruijnGraph(k,kmers):
-  nNodes = len(kmers)
-  match = []
-  adj_dict = {}
+def ReadKmerReads(inputFile):
+  paired = []
+  read1 = []
+  read2 = []
+  with open(inputFile,'r') as inFile:
+    line = inFile.readline().strip().split(' ')
+    k = int(line[0])
+    d = int(line[1])
+    for line in inFile:
+      line = line.strip()
+      paired.append(line)
+      line = line.split('|')
+      read1.append(line[0])
+      read2.append(line[1])
 
+  return k,d,paired,read1,read2
+
+def KDmerComposition(k,d,txt):
+  n = len(txt)
+  print '({},{})-mer composition for |{}|={}'.format(k,d,txt,n)
+  reads = []
+  read1 = []
+  read2 = []
+  for i in range(n-k*2-d+1):
+    read1.append(txt[i:i+k])
+    read2.append(txt[i+k+d:i+k+d+k])
+    reads.append('{}|{}'.format(read1[-1],read2[-1]))
+  
+  return reads,read1,read2
+
+def DeBruijnGraphAuxFun(kmers,suffix,prefix):
+  nNodes = len(kmers)
+  nEdges = 0
+  adj_dict = {}
   for i in range(nNodes):
     for j in range(nNodes):
-      if i == j: continue
-      left_str = kmers[i]
-      right_str = kmers[j]
+      if suffix[i] != prefix[j] : continue       
+      if i not in adj_dict:
+        adj_dict[i] = []
+      if j not in adj_dict[i]:
+        adj_dict[i].append(j)
+        nEdges += 1
 
-      if left_str[1:] != right_str[:-1] : continue 
-      
-      left = kmers.index(left_str)
-      right = kmers.index(right_str)
+  print '|(V,E)|=({},{})'.format(nNodes, nEdges)
+  
+  return adj_dict,nNodes,nEdges
 
-      if left not in adj_dict:
-        adj_dict[left] = []
-      if right not in adj_dict[left]:
-        adj_dict[left].append(right)
+def DeBruijnGraph(kmers):
+  prefix = []
+  suffix = []
+  for i in range(len(kmers)):
+    prefix.append(kmers[i][:-1])
+    suffix.append(kmers[i][1:])
 
-  nEdges = 0
-  for key in adj_dict:
-    nEdges += len(adj_dict[key])
+  return DeBruijnGraphAuxFun(kmers,suffix,prefix)
+
+def PairedDeBruijnGraph(paired,read1,read2):
+  prefix = []
+  suffix = []
+  for i in range(len(paired)):
+    prefix.append('{}|{}'.format(read1[i][:-1],read2[i][:-1]))
+    suffix.append('{}|{}'.format(read1[i][1:],read2[i][1:]))
+  
+  adj_dict,nNodes,nEdges = DeBruijnGraphAuxFun(paired,suffix,prefix)
+  
 
   return adj_dict,nNodes,nEdges
 
@@ -161,7 +202,6 @@ def PrintEulerPathKmer(path,k,kmers,Eulerian):
   return txt
   
 def Euler(adj,nNodes,nEdges):
-
   Eulerian, sink, source = IsEulerian(adj,nNodes)
 
   if Eulerian == True:
@@ -171,10 +211,7 @@ def Euler(adj,nNodes,nEdges):
 
   return cycle, Eulerian
       
-def main_Euler():
-  #myfile = 'sample_cycle' #myfile = dataset_203_3
-  #myfile = 'sample_path'  #myfile = dataset_203_6
-  myfile = input("Enter filename (without file ending):")
+def main_Euler(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
 
@@ -188,7 +225,7 @@ def main_Euler():
 
 def EulerGraphForKmers(k,kmers,isUnivStr):
   print 'Input {}-mers: {}'.format(k,kmers)
-  adj,nNodes,nEdges = DeBruijnGraph(k,kmers)  
+  adj,nNodes,nEdges = DeBruijnGraph(kmers)  
   
   if isUnivStr:
     for i in [0,1]:
@@ -196,14 +233,35 @@ def EulerGraphForKmers(k,kmers,isUnivStr):
       adj[ix].append(ix)
       nEdges+=1
 
-  print '|(V,E)|=({},{})'.format(nNodes, nEdges)
   path,Eulerian = Euler(adj,nNodes,nEdges)  
   txt = PrintEulerPathKmer(path,k,kmers,Eulerian)
   return txt
 
-def main_kmer():
-  #myfile = 'sample_kmers'
-  myfile = 'dataset_203_7'
+def RemoveDuplicatePairs(paired,read1,read2):
+  nNodes=len(paired)
+  unique_pairs = []
+  for i in reversed(range(nNodes)):
+    if paired[i] not in unique_pairs:
+      unique_pairs.append(paired[i])
+    else:
+      paired.pop(i)
+      read1.pop(i)
+      read2.pop(i)
+  return paired,read1,read2
+
+def EulerGraphForPairedKmers(k,d,paired,read1,read2):
+  print 'Input ({},{})-mer composition'.format(k,d)
+
+  paired,read1,read2=RemoveDuplicatePairs(paired,read1,read2)
+  adj, nNodes, nEdges = PairedDeBruijnGraph(paired,read1,read2)  
+  path, Eulerian = Euler(adj,nNodes,nEdges)
+
+  txt1 = PrintEulerPathKmer(path,k,read1,Eulerian)
+  txt2 = PrintEulerPathKmer(path,k,read2,Eulerian)
+  txt = txt1[:k+d]+txt2
+  return txt  
+
+def main_kmer(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   
@@ -214,9 +272,7 @@ def main_kmer():
     outFile.write(txt)
     print 'Solution:{}'.format(txt)
 
-def main_univ():
-  
-  myfile = 'dataset_203_11'
+def main_univ(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   
@@ -230,5 +286,29 @@ def main_univ():
   with open(outputFile, 'w') as outFile:
     outFile.write(txt)
 
+def main_reads(myfile):
+  '''
+  k=3
+  d=2
+  txt='TAATGCCATGGGATGTT'
+  paired,read1,read2 = KDmerComposition(k,d,txt)
+  #with open('dummy.out','w') as outFile: outFile.write(' '.join(sorted(paired)))
+  print ' '.join(paired)
+  print txt == EulerGraphForPairedKmers(k,d,paired,read1,read2)
+  '''
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'  
+  k,d,paired,read1,read2 = ReadKmerReads(inputFile)
+  txt = EulerGraphForPairedKmers(k,d,paired,read1,read2)
+  with open(outputFile, 'w') as outFile:
+    outFile.write(txt)
 
-main_univ()
+'''
+main_Euler('sample_cycle') #main_Euler('dataset_203_3')
+main_Euler('sample_path') #main_Euler('dataset_203_6')
+main_kmer('sample_kmers') #main_kmer('dataset_203_7')
+main_univ('dataset_203_11') 
+'''
+main_reads('sample_reads')
+main_reads('dataset_204_15')
+
