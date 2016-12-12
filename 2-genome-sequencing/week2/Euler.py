@@ -9,6 +9,10 @@ EulerianCycle(Graph)
 
 '''
 
+def BinaryStrings(k):
+  import itertools
+  return ["".join(seq) for seq in itertools.product("01", repeat=k)]
+
 def ReadKmers(inFile):
   kmers = []
   with open(inFile,'r') as inputFile:
@@ -146,13 +150,18 @@ def PrintEulerGraph(cycle,Eulerian):
     txt += '->{}'.format(str(cycle[0]))
   return txt
 
-def PrintEulerPathKmer(path,k,kmers):
+def PrintEulerPathKmer(path,k,kmers,Eulerian):
   txt = kmers[path[0]]
-  for k in range(1,len(path)):
-    txt += kmers[path[k]][-1]
+  for i in range(1,len(path)):
+    txt += kmers[path[i]][-1]
+
+  if Eulerian:
+    txt = txt[k-1:]
+
   return txt
   
 def Euler(adj,nNodes,nEdges):
+
   Eulerian, sink, source = IsEulerian(adj,nNodes)
 
   if Eulerian == True:
@@ -177,6 +186,21 @@ def main_Euler():
     txt = PrintEulerGraph(cycle,Eulerian)
     outFile.write(txt)
 
+def EulerGraphForKmers(k,kmers,isUnivStr):
+  print 'Input {}-mers: {}'.format(k,kmers)
+  adj,nNodes,nEdges = DeBruijnGraph(k,kmers)  
+  
+  if isUnivStr:
+    for i in [0,1]:
+      ix = kmers.index(str(i)*k)
+      adj[ix].append(ix)
+      nEdges+=1
+
+  print '|(V,E)|=({},{})'.format(nNodes, nEdges)
+  path,Eulerian = Euler(adj,nNodes,nEdges)  
+  txt = PrintEulerPathKmer(path,k,kmers,Eulerian)
+  return txt
+
 def main_kmer():
   #myfile = 'sample_kmers'
   myfile = 'dataset_203_7'
@@ -184,14 +208,27 @@ def main_kmer():
   outputFile = myfile + '.out'
   
   k,kmers = ReadKmers(inputFile)
-  print 'Input {}-kmers: {}'.format(k,kmers)
-  adj,nNodes,nEdges = DeBruijnGraph(k,kmers)
-
-  path,Eulerian = Euler(adj,nNodes,nEdges)
+  txt = EulerGraphForKmers(k,kmers,False)
   
   with open(outputFile, 'w') as outFile:
-    txt = PrintEulerPathKmer(path,k,kmers)
     outFile.write(txt)
     print 'Solution:{}'.format(txt)
 
-main_kmer()
+def main_univ():
+  
+  myfile = 'dataset_203_11'
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile,'r') as inFile:
+    k = int(inFile.readline().strip())
+
+  kmers = BinaryStrings(k-1)
+  txt = EulerGraphForKmers(k-1,kmers,True)  
+  print '{}-universal string: {}'.format(k,txt)
+
+  with open(outputFile, 'w') as outFile:
+    outFile.write(txt)
+
+
+main_univ()
