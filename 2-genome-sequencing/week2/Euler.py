@@ -223,16 +223,9 @@ def main_Euler(myfile):
     txt = PrintEulerGraph(cycle,Eulerian)
     outFile.write(txt)
 
-def EulerGraphForKmers(k,kmers,isUnivStr):
+def EulerGraphForKmers(k,kmers):
   print 'Input {}-mers: {}'.format(k,kmers)
-  adj,nNodes,nEdges = DeBruijnGraph(kmers)  
-  
-  if isUnivStr:
-    for i in [0,1]:
-      ix = kmers.index(str(i)*k)
-      adj[ix].append(ix)
-      nEdges+=1
-
+  adj,nNodes,nEdges = DeBruijnGraph(kmers)    
   path,Eulerian = Euler(adj,nNodes,nEdges)  
   txt = PrintEulerPathKmer(path,k,kmers,Eulerian)
   return txt
@@ -266,7 +259,7 @@ def main_kmer(myfile):
   outputFile = myfile + '.out'
   
   k,kmers = ReadKmers(inputFile)
-  txt = EulerGraphForKmers(k,kmers,False)
+  txt = EulerGraphForKmers(k,kmers)
   
   with open(outputFile, 'w') as outFile:
     outFile.write(txt)
@@ -280,8 +273,9 @@ def main_univ(myfile):
     k = int(inFile.readline().strip())
 
   kmers = BinaryStrings(k-1)
-  txt = EulerGraphForKmers(k-1,kmers,True)  
+  txt = EulerGraphForKmers(k-1,kmers)  
   print '{}-universal string: {}'.format(k,txt)
+  print 'Number of such strings:',2**(2**(k-1)-k)
 
   with open(outputFile, 'w') as outFile:
     outFile.write(txt)
