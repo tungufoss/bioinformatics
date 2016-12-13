@@ -17,7 +17,7 @@ def ReadKmers(inputFile,startsWithK):
   kmers = []
   with open(inputFile,'r') as inFile:
     if startsWithK==True:
-      k = inFile.readline().strip()    
+      k = int(inFile.readline().strip())
     for line in inFile:
       line = line.strip()
       kmers.append(line)
@@ -140,25 +140,30 @@ def EulerianCycle(adj,n):
     
   return cycle 
 
-def EulerianPath(adj, nEdges, sink, source):
-    print 'Adding dummy edge from sink to source: {}->{}'.format(sink,source)    
-    if sink in adj:
-      adj[sink].append(source)
-    else: 
-      adj[sink] = [source]
 
-    nEdges += 1 # note we added dummy edge
-   
-    cycle = EulerianCycle(adj,nEdges)
+def EulerianPath(adj, nEdges, nNodes, sink, source):
+  nNeeded,indegree,outdegree = MinEdgesNeededForBalancing(adj,nNodes)
+  if nNeeded != 1 : 
+    print 'Not Eulerian, need at least {} more edges'.format(nNeeded)
+    return []
 
-    for i in range(nEdges):
-      from_node = cycle[i]
-      to_node = cycle[(i+1)%nEdges]
-      if to_node != source or from_node != sink:
-        continue
+  print 'Adding dummy edge from sink to source: {}->{}'.format(sink,source)    
+  if sink in adj:
+    adj[sink].append(source)
+  else: 
+    adj[sink] = [source]   
+  nEdges+=1 # added a dummy edge
 
-      path = rotate(cycle,(i+1)%nEdges)
-      return path
+  cycle = EulerianCycle(adj,nEdges)
+
+  for i in range(nEdges):
+    from_node = cycle[i]
+    to_node = cycle[(i+1)%nEdges]
+    if to_node != source or from_node != sink:
+      continue
+    path = rotate(cycle,(i+1)%nEdges)
+
+  return path
     
 def DegreeOfNodes(adj,nNodes):
   outdegree = [0]*nNodes
@@ -171,10 +176,8 @@ def DegreeOfNodes(adj,nNodes):
   #print 'indegree: {}'.format(indegree)
   return indegree, outdegree
 
-def IsEulerian(adj,nNodes):
-
+def Cyclic(adj,nNodes):
   indegree,outdegree = DegreeOfNodes(adj,nNodes)
- 
   sink = -1
   source = -1  
   for i in range(nNodes):
@@ -182,9 +185,7 @@ def IsEulerian(adj,nNodes):
       source = i
     elif outdegree[i] < indegree[i] and sink == -1:
       sink = i
-    elif outdegree[i] != indegree[i]:
-      return False, sink, source
-
+    
   if (sink == -1 and source == -1) :
     return True, sink, source
   else :
@@ -209,40 +210,37 @@ def PrintEulerPathKmer(path,k,kmers,Eulerian):
   return txt
   
 def Euler(adj,nNodes,nEdges):
-  Eulerian, sink, source = IsEulerian(adj,nNodes)
-
-  if Eulerian == True:
-    cycle = EulerianCycle(adj,nEdges)
+  cyclic, sink, source = Cyclic(adj,nNodes)
+  if cyclic == True:
+    return EulerianCycle(adj, nEdges), True
   else :
-    cycle = EulerianPath(adj, nEdges, sink, source)
-
-  return cycle, Eulerian
+    return EulerianPath(adj, nEdges, nNodes, sink, source), False
       
 def main_Euler(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
 
   adj,n = ReadAdjacencyList(inputFile)
-  
-  cycle, Eulerian = Euler(adj,n,n)
+ 
+  path, cyclic = Euler(adj,n,n)
   
   with open(outputFile, 'w') as outFile:
-    txt = PrintEulerGraph(cycle,Eulerian)
+    txt = PrintEulerGraph(path,cyclic)
     outFile.write(txt)
 
 def EulerGraphForKmers(k,kmers):
-  print 'Input {}-mers: {}'.format(k,kmers)
-  adj,nNodes,nEdges = DeBruijnGraph(kmers)    
+  #print 'Input {}-mers: {}'.format(k,kmers)
+  adj,nNodes,nEdges = DeBruijnGraph(kmers) 
   path,Eulerian = Euler(adj,nNodes,nEdges)  
+  if len(path)==0 : return '<No path found>'
   txt = PrintEulerPathKmer(path,k,kmers,Eulerian)
   return txt
 
-def Contigs(k,kmers):
+def Contig(k,kmers):
   #print 'Input {}-mers: {}'.format(k,kmers)
-  adj,nNodes,nEdges = DeBruijnGraph(kmers) 
+  adj,nNodes,nEdges = DeBruijnGraph(kmers)
 
   indegree,outdegree = DegreeOfNodes(adj,nNodes)
-  print adj
   for i in range(nNodes):
     while outdegree[i] == 1 and indegree[adj[i][0]] == 1:
       from_node = kmers[i]
@@ -260,17 +258,22 @@ def Contigs(k,kmers):
         del adj[i]
         outdegree[i] = 0
 
-      outdegree[j] = 0
-      indegree[j] = 0        
+      outdegree[j] = -99
+      indegree[j] = -99
+      nEdges-=1
         
   contig = []
   for i in range(nNodes):
     if indegree[i] > 0 or outdegree[i] > 0 : 
       contig.append(kmers[i])
-      print i,kmers[i]
-  print adj
-  return contig
 
+  '''
+  source = indegree.index(0)
+  sink = outdegree.index(0)
+  print 'Source:{} and Sink:{}'.format(source, sink)
+  '''
+  return contig,adj,kmers
+  
 def RemoveDuplicatePairs(paired,read1,read2):
   nNodes=len(paired)
   unique_pairs = []
@@ -284,11 +287,12 @@ def RemoveDuplicatePairs(paired,read1,read2):
   return paired,read1,read2
 
 def EulerGraphForPairedKmers(k,d,paired,read1,read2):
-  print 'Input ({},{})-mer composition'.format(k,d)
+  #print 'Input ({},{})-mer composition'.format(k,d)
 
   paired,read1,read2=RemoveDuplicatePairs(paired,read1,read2)
   adj, nNodes, nEdges = PairedDeBruijnGraph(paired,read1,read2)  
   path, Eulerian = Euler(adj,nNodes,nEdges)
+  if len(path)==0 : return '<No path found>'
 
   txt1 = PrintEulerPathKmer(path,k,read1,Eulerian)
   txt2 = PrintEulerPathKmer(path,k,read2,Eulerian)
@@ -341,21 +345,49 @@ def main_reads(myfile):
 def main_contigs(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
-  k,kmers = ReadKmers(inputFile,False)
-  contigs = Contigs(k,kmers)
+  k,kmers = ReadKmers(inputFile,False)  
+  contigs,adj,kmers_merged = Contig(k,kmers[:])
   with open(outputFile, 'w') as outFile:
     txt = ' '.join(sorted(contigs))
     outFile.write(txt)
+
+def MinEdgesNeededForBalancing(adj,nNodes):  
+  indegree,outdegree = DegreeOfNodes(adj,nNodes)
+  unbalanced_in = 0
+  unbalanced_out = 0
+  for i in range(nNodes):
+    if indegree[i] < outdegree[i] : 
+      unbalanced_in += outdegree[i]-indegree[i]
+    elif indegree[i] > outdegree[i] : 
+      unbalanced_out += indegree[i]-outdegree[i]
+  return max(unbalanced_in,unbalanced_out),indegree,outdegree
+
+def main_test():
+  print '\n\nQ1 Give a linear string having the following 4-mer composition.'
+  k,kmers = ReadKmers('test_q1_kmers.txt',True)
+  contig, adj, kmers_merged = Contig(k, kmers[:])
+  print adj
+  for key in adj:
+    print '{} {}'.format(key,kmers_merged[key]) 
+  print 'Q1 sol: <read from solution>'
+  
+  print '\n\nQ2 Below is the adjacency list of a graph. What is the minimum number of edges we must add to this graph in order to make each node balanced? (You may add duplicate edges connecting the same two nodes, but do not add new nodes.)'
+  adj,nNodes = ReadAdjacencyList('test_q2_adjlist.txt')
+  nNeeded,indegree,outdegree = MinEdgesNeededForBalancing(adj,nNodes)
+  print 'Q2 sol: Need at least {} edges to balance'.format(nNeeded) 
+      
+  print '\n\nQ3 There is a single (linear) string with the following (3,1)-mer composition. Find it.'
+  k,d,paired,read1,read2 = ReadKmerReads('test_q3_reads.txt')
+  txt = EulerGraphForPairedKmers(k,d,paired,read1,read2)
+  print 'Q3 sol:',txt
 
 '''
 main_Euler('sample_cycle') #main_Euler('dataset_203_3')
 main_Euler('sample_path') #main_Euler('dataset_203_6')
 main_kmer('sample_kmers') #main_kmer('dataset_203_7')
-main_univ('dataset_203_11') 
-main_reads('sample_reads')
-main_reads('dataset_204_15')
-main_contigs('sample_contigs')
-main_contigs('dataset_205_5')
+#main_univ('dataset_203_11') 
+main_reads('sample_reads') #main_reads('dataset_204_15')
+main_contigs('sample_contigs') #main_contigs('dataset_205_5')
+main_reads('sample_gappedpatterns') #main_reads('dataset_6206_7')
 '''
-main_reads('sample_gappedpatterns')
-main_reads('dataset_6206_7')
+main_test()
