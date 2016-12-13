@@ -13,13 +13,18 @@ def BinaryStrings(k):
   import itertools
   return ["".join(seq) for seq in itertools.product("01", repeat=k)]
 
-def ReadKmers(inputFile):
+def ReadKmers(inputFile,startsWithK):
   kmers = []
   with open(inputFile,'r') as inFile:
-    k = inFile.readline().strip()    
+    if startsWithK==True:
+      k = inFile.readline().strip()    
     for line in inFile:
       line = line.strip()
       kmers.append(line)
+  
+  if startsWithK==False:
+    k = len(kmers[0])
+
   return k,kmers
 
 def ReadKmerReads(inputFile):
@@ -87,7 +92,6 @@ def PairedDeBruijnGraph(paired,read1,read2):
   
   adj_dict,nNodes,nEdges = DeBruijnGraphAuxFun(paired,suffix,prefix)
   
-
   return adj_dict,nNodes,nEdges
 
 def ReadAdjacencyList(inFile):
@@ -156,8 +160,7 @@ def EulerianPath(adj, nEdges, sink, source):
       path = rotate(cycle,(i+1)%nEdges)
       return path
     
-def IsEulerian(adj,nNodes):
-
+def DegreeOfNodes(adj,nNodes):
   outdegree = [0]*nNodes
   indegree = [0]*nNodes
   for from_node in adj:    
@@ -166,10 +169,14 @@ def IsEulerian(adj,nNodes):
       indegree[to_node]+=1
   #print 'outdegree:{}'.format(outdegree)
   #print 'indegree: {}'.format(indegree)
+  return indegree, outdegree
 
+def IsEulerian(adj,nNodes):
+
+  indegree,outdegree = DegreeOfNodes(adj,nNodes)
+ 
   sink = -1
-  source = -1
-  
+  source = -1  
   for i in range(nNodes):
     if outdegree[i] > indegree[i] and source == -1:
       source = i
@@ -230,6 +237,40 @@ def EulerGraphForKmers(k,kmers):
   txt = PrintEulerPathKmer(path,k,kmers,Eulerian)
   return txt
 
+def Contigs(k,kmers):
+  #print 'Input {}-mers: {}'.format(k,kmers)
+  adj,nNodes,nEdges = DeBruijnGraph(kmers) 
+
+  indegree,outdegree = DegreeOfNodes(adj,nNodes)
+  print adj
+  for i in range(nNodes):
+    while outdegree[i] == 1 and indegree[adj[i][0]] == 1:
+      from_node = kmers[i]
+      j = adj[i][0]
+      to_node = kmers[j]
+        
+      kmer = from_node+to_node[k-1:]
+      #print '{}->{}\nA: {}\nB:  {}\nAB:{}'.format(i,j,from_node,to_node,kmer) 
+      kmers[i] = kmer
+      if outdegree[j] > 0:
+        adj[i] = adj[j]
+        del adj[j]
+        outdegree[i] = outdegree[j]
+      else:          
+        del adj[i]
+        outdegree[i] = 0
+
+      outdegree[j] = 0
+      indegree[j] = 0        
+        
+  contig = []
+  for i in range(nNodes):
+    if indegree[i] > 0 or outdegree[i] > 0 : 
+      contig.append(kmers[i])
+      print i,kmers[i]
+  print adj
+  return contig
+
 def RemoveDuplicatePairs(paired,read1,read2):
   nNodes=len(paired)
   unique_pairs = []
@@ -258,7 +299,7 @@ def main_kmer(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   
-  k,kmers = ReadKmers(inputFile)
+  k,kmers = ReadKmers(inputFile,True)
   txt = EulerGraphForKmers(k,kmers)
   
   with open(outputFile, 'w') as outFile:
@@ -297,12 +338,24 @@ def main_reads(myfile):
   with open(outputFile, 'w') as outFile:
     outFile.write(txt)
 
+def main_contigs(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  k,kmers = ReadKmers(inputFile,False)
+  contigs = Contigs(k,kmers)
+  with open(outputFile, 'w') as outFile:
+    txt = ' '.join(sorted(contigs))
+    outFile.write(txt)
+    print txt
+
 '''
 main_Euler('sample_cycle') #main_Euler('dataset_203_3')
 main_Euler('sample_path') #main_Euler('dataset_203_6')
 main_kmer('sample_kmers') #main_kmer('dataset_203_7')
 main_univ('dataset_203_11') 
-'''
 main_reads('sample_reads')
 main_reads('dataset_204_15')
+'''
+#main_contigs('sample_contigs')
+main_contigs('dataset_205_5')
 
