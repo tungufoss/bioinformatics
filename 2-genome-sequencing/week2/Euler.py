@@ -346,7 +346,6 @@ def main_contigs(myfile):
   with open(outputFile, 'w') as outFile:
     txt = ' '.join(sorted(contigs))
     outFile.write(txt)
-    print txt
 
 '''
 main_Euler('sample_cycle') #main_Euler('dataset_203_3')
@@ -355,7 +354,8 @@ main_kmer('sample_kmers') #main_kmer('dataset_203_7')
 main_univ('dataset_203_11') 
 main_reads('sample_reads')
 main_reads('dataset_204_15')
-'''
-#main_contigs('sample_contigs')
+main_contigs('sample_contigs')
 main_contigs('dataset_205_5')
-
+'''
+main_reads('sample_gappedpatterns')
+main_reads('dataset_6206_7')
