@@ -24,7 +24,6 @@ def StringSpelledByGenomePath(kmers):
     txt += kmers[i][-1]
   return txt
 
-
 def Fixes(kmers):
   prefix = []
   suffix = []
@@ -34,8 +33,6 @@ def Fixes(kmers):
   return prefix,suffix
 
 def Overlap(kmers):
-  dups_kmers = list(set([x for x in kmers if kmers.count(x) > 1]))  
-  kmers = reduce(lambda l, x: l.append(x) or l if x not in l else l, kmers, []) # unique kmers
   prefix,suffix = Fixes(kmers)
   adj = {}
   n = len(prefix)
@@ -48,30 +45,33 @@ def Overlap(kmers):
       else :
         adj[i].append(j)
 
-  # add duplicate matching edges
-  if len(dups_kmers) > 0:
-    n = len(dups_kmers)
-    for ii in range(n):
-      i = kmers.index(dups_kmers[ii])
-      for jj in range(n):
-        if ii==jj : continue
-        j = kmers.index(dups_kmers[jj])
-        if suffix[i] != prefix[j] : continue        
-        if i not in adj : 
-          adj[i] = [j]
-        else :
-          adj[i].append(j)
-
   return adj 
 
+def DeBruijnGraph(kmers):
+  prefix,suffix = Fixes(kmers)  
+  nNodes = len(kmers)
+  nEdges = 0
+  adj_dict = {}
+  for i in range(nNodes):
+    for j in range(nNodes):
+      if suffix[i] != prefix[j] : continue       
+      if i not in adj_dict:
+        adj_dict[i] = []
+      if j not in adj_dict[i]:
+        adj_dict[i].append(j)
+        nEdges += 1
+        
+  print '|(V,E)|=({},{})'.format(nNodes, nEdges)   
+  return adj_dict
+    
 def AdjencyListToString(adj,kmers):
   txt = []
   for i in adj:
     from_node = kmers[i]
     to_nodes = ','.join([kmers[j] for j in adj[i]])
-    txt.append('{} -> {}'.format(from_node,to_nodes))
+    txt.append('{} -> {}'.format(from_node,to_nodes))    
   return txt
-
+ 
 def main_composition(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -106,7 +106,19 @@ def main_debruijn_fromstring(myfile):
     k = int(inFile.readline().strip())
     txt = inFile.readline().strip()
   kmers = Composition(k-1,txt)
-  adj = Overlap(kmers)
+  kmers = reduce(lambda l, x: l.append(x) or l if x not in l else l, kmers, []) # unique kmers
+  adj = DeBruijnGraph(kmers)
+  txt = AdjencyListToString(adj,kmers) 
+  with open(outputFile,'w') as outFile:
+    txt='\n'.join(sorted(txt))
+    outFile.write(txt)
+
+def main_debruijn_fromkmers(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  k,kmers = ReadKmers(inputFile)
+  kmers = reduce(lambda l, x: l.append(x) or l if x not in l else l, kmers, []) # unique kmers
+  adj = DeBruijnGraph(kmers)
   txt = AdjencyListToString(adj,kmers) 
   with open(outputFile,'w') as outFile:
     txt='\n'.join(sorted(txt))
@@ -121,4 +133,6 @@ main_overlap('sample_overlap')
 main_overlap('dataset_198_10')
 '''
 main_debruijn_fromstring('sample_debruijn_fromstring')
-main_debruijn_fromstring('dataset_199_6')
+main_debruijn_fromstring('dataset_199_6') # <--- needs fixing!
+main_debruijn_fromkmers('sample_debruijn_fromkmers') # <--- needs fixing!
+main_debruijn_fromkmers('dataset_200_8') # <--- needs fixing!
