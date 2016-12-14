@@ -381,6 +381,15 @@ def main_test():
   txt = EulerGraphForPairedKmers(k,d,paired,read1,read2)
   print 'Q3 sol:',txt
 
+def main_univstr(n):  
+  kmers = BinaryStrings(n-1)
+  txt = EulerGraphForKmers(n-1,kmers)
+  txt += txt[0:n-1]
+  print '{}-universal string: {}'.format(n,txt)
+  N = 2**(2**(n-1)-n)
+  print 'Number of distinct De Bruijn sequences B(2,{}): {}'.format(n,N)
+  print 'Number of such binary strings:',N**2
+
 '''
 main_Euler('sample_cycle') #main_Euler('dataset_203_3')
 main_Euler('sample_path') #main_Euler('dataset_203_6')
@@ -390,4 +399,5 @@ main_reads('sample_reads') #main_reads('dataset_204_15')
 main_contigs('sample_contigs') #main_contigs('dataset_205_5')
 main_reads('sample_gappedpatterns') #main_reads('dataset_6206_7')
 '''
-main_test()
+#main_test()
+main_univstr(4)
