@@ -20,6 +20,29 @@ def StringSpelledByGenomePath(kmers):
     txt += kmers[i][-1]
   return txt
 
+def Overlap(kmers):
+  adj = {}
+  nNodes = len(kmers)
+  for i in range(nNodes):
+    for j in range(nNodes):
+      if i == j : continue
+      suffix = kmers[i][1:]
+      prefix = kmers[j][:-1]
+      if suffix != prefix : continue
+      if i not in adj : 
+        adj[i] = [j]
+      else : 
+        adj[i].append(j)
+        
+  return adj 
+
+def AdjencyListToString(adj,kmers):
+  txt = []
+  for i in adj:
+    for j in adj[i]:
+      txt.append('{} -> {}'.format(kmers[i],kmers[j]))
+  return txt
+
 def main_composition(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -38,9 +61,20 @@ def main_genomepath(myfile):
   with open(outputFile,'w') as outFile:
     outFile.write(txt)
 
+def main_overlap(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  k,kmers = ReadKmers(inputFile)
+  adj = Overlap(kmers)
+  txt = AdjencyListToString(adj,kmers)
+  with open(outputFile,'w') as outFile:
+    outFile.write('\n'.join(sorted(txt)))
+
 '''
 main_composition('sample_composition')
 main_composition('dataset_197_3')
-'''
 main_genomepath('sample_genomepath')
 main_genomepath('dataset_198_3')
+'''
+main_overlap('sample_overlap')
+main_overlap('dataset_198_10')
