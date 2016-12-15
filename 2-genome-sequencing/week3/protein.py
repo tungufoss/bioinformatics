@@ -106,12 +106,16 @@ def main_peptideencoding(myfile):
   with open(outputFile,'w') as outFile:
     outFile.write('\n'.join(sol))
 
-def main_CountSubpeptides(myfile):
+def main_CountSubpeptides(myfile,IsCyclic):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   with open(inputFile) as inFile:
     n = int(inFile.readline().strip())  
-  N=n*(n-1)
+  if IsCyclic: 
+    N=n*(n-1)
+  else : 
+    N=n*(n+1)/2 + 1
+  print '{} length peptide has {} {} combinations'.format(n,N,'cyclic' if IsCyclic  else 'linear')
   with open(outputFile,'w') as outFile:
     outFile.write(str(N))
 
@@ -146,11 +150,6 @@ def main_CountSubpeptidesWithMass(myfile):
         total +=1
 
   print (total)
-  
-  
-  
-  
-  
       
 def main_spectrum(myfile):
   inputFile = myfile + '.txt'
@@ -169,9 +168,11 @@ main_translateprotein('sample_translateprotein')
 main_translateprotein('dataset_96_4')
 main_peptideencoding('sample_peptideencoding')
 main_peptideencoding('dataset_96_7')
-main_CountSubpeptides('sample_cntsubpeptides')
-main_CountSubpeptides('dataset_98_3')
+main_CountSubpeptides('sample_cntsubpeptides_cyclic',1)
+main_CountSubpeptides('dataset_98_3',1)
 main_spectrum('sample_spectrum')
 main_spectrum('dataset_98_4')
+main_CountSubpeptidesWithMass('sample_mass') # not working properly 
 '''
-main_CountSubpeptidesWithMass('sample_mass')
+main_CountSubpeptides('sample_cntsubpeptides_path',0)
+main_CountSubpeptides('dataset_100_3',0)
