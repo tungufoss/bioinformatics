@@ -10,14 +10,50 @@ def RNA_codon_table():
 
 def TranslateRNAToCodon(txt,tbl):
   sol = ''
-  i = 0
-  n = len(txt)-3
-  while i < n:
+  i = 0  
+  while i < len(txt):
     key=txt[i:(i+3)]
-    sol += tbl[key]
+    if key in tbl : 
+      sol += tbl[key]
+    else : 
+      sol += ' '
     i+=3
   return sol
 
+def ReverseComplement(str):
+  rev = ''
+  switcher = {
+      'G': 'C',
+      'C': 'G',
+      'T': 'A',
+      'A': 'T',
+    }
+  for char in reversed(str):
+    rev += switcher[char]
+  return rev
+
+def Transcribe(str):
+  return str.replace("T", "U")
+  
+def PeptideEncoding(txt,codon,tbl):
+  rev_txt = Transcribe(ReverseComplement(txt))
+  trs_txt = Transcribe(txt)
+  nCodon = 3*len(codon)  
+  substrs = []
+  n=len(txt)-nCodon
+  
+  for i in range(n):
+    str = txt[i:(i+nCodon)]
+    trs_str = trs_txt[i:(i+nCodon)]
+    rev_str = rev_txt[(n-i):(n-i+nCodon)]
+        
+    if TranslateRNAToCodon(trs_str,tbl) == codon : 
+      substrs.append(str)
+    elif TranslateRNAToCodon(rev_str,tbl) == codon: 
+      substrs.append(str)
+  
+  return substrs
+  
 def main_translateprotein(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -27,6 +63,21 @@ def main_translateprotein(myfile):
   sol = TranslateRNAToCodon(txt,tbl)
   with open(outputFile,'w') as outFile:
     outFile.write(sol)  
-  
-main_translateprotein('sample_translateprotein')
-main_translateprotein('dataset_96_4')
+
+def main_peptideencoding(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  with open(inputFile) as inFile:
+    txt = inFile.readline().strip()
+    codon = inFile.readline().strip()
+  tbl = RNA_codon_table()
+  sol = PeptideEncoding(txt,codon,tbl)  
+  with open(outputFile,'w') as outFile:
+    outFile.write('\n'.join(sol))
+
+	
+#main_translateprotein('sample_translateprotein')
+#main_translateprotein('dataset_96_4')
+
+main_peptideencoding('sample_peptideencoding')
+main_peptideencoding('dataset_96_7')
