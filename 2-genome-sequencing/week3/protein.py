@@ -14,7 +14,7 @@ def Integer_mass_table():
     for line in inFile: 
       line = line.strip().split(' ')
       integer = line[0]
-      mass = line[1]
+      mass = int(line[1])
       tbl[integer]=mass
   return tbl
   
@@ -63,6 +63,24 @@ def PeptideEncoding(txt,codon,tbl):
       substrs.append(str)
   
   return substrs
+ 
+def Subpeptides(peptide):
+  subpeptides = ['',peptide]  
+  N = len(peptide)
+  peptide+=peptide
+  for n in range(1,N):
+    for i in range(N):      
+      subpeptides.append(peptide[i:i+n])  
+  return subpeptides
+
+def Masses(subpeptides,im_tbl):  
+  masses = []
+  for sub in subpeptides:
+    mass = 0
+    for char in sub:      
+      mass += im_tbl[char]
+    masses.append(mass)   
+  return masses
   
 def main_translateprotein(myfile):
   inputFile = myfile + '.txt'
@@ -93,12 +111,25 @@ def main_CountSubpeptides(myfile):
   N=n*(n-1)
   with open(outputFile,'w') as outFile:
     outFile.write(str(N))
-	
+
+def main_spectrum(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  with open(inputFile) as inFile:
+    peptide = inFile.readline().strip()  
+  subpeptides = Subpeptides(peptide)
+  im_tbl = Integer_mass_table()
+  masses = Masses(subpeptides,im_tbl)  
+  with open(outputFile,'w') as outFile:    
+    outFile.write(' '.join([str(m) for m in sorted(masses)]))
+  
 '''
 main_translateprotein('sample_translateprotein')
 main_translateprotein('dataset_96_4')
 main_peptideencoding('sample_peptideencoding')
 main_peptideencoding('dataset_96_7')
-'''
 main_CountSubpeptides('sample_cntsubpeptides')
 main_CountSubpeptides('dataset_98_3')
+'''
+main_spectrum('sample_spectrum')
+main_spectrum('dataset_98_4')
