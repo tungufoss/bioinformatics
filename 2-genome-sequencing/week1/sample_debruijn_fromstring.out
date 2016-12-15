@@ -1,9 +1,9 @@
 AAG -> AGA,AGA
 AGA -> GAT
 ATT -> TTC
-CTA -> AAG
+CTA -> TAA
 CTC -> TCT
 GAT -> ATT
-TCT -> CTA
-TCT -> CTC,TCT
+TAA -> AAG
+TCT -> CTA,CTC
 TTC -> TCT
