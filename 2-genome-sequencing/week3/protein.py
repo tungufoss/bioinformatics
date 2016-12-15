@@ -73,14 +73,17 @@ def Subpeptides(peptide):
       subpeptides.append(peptide[i:i+n])  
   return subpeptides
 
-def Masses(subpeptides,im_tbl):  
-  masses = []
-  for sub in subpeptides:
-    mass = 0
-    for char in sub:      
-      mass += im_tbl[char]
-    masses.append(mass)   
-  return masses
+def PeptideMass(peptide,im_tbl):  
+  mass = 0
+  for char in peptide:      
+    mass += im_tbl[char]
+  return mass
+
+def Weigths(peptides,im_tbl):
+  weights = {}
+  for peptide in peptides:
+    weights[peptide] = PeptideMass(peptide,im_tbl)
+  return weights
   
 def main_translateprotein(myfile):
   inputFile = myfile + '.txt'
@@ -112,6 +115,43 @@ def main_CountSubpeptides(myfile):
   with open(outputFile,'w') as outFile:
     outFile.write(str(N))
 
+def main_CountSubpeptidesWithMass(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  with open(inputFile) as inFile:
+    mass = int(inFile.readline().strip())  
+  im_tbl = Integer_mass_table()
+  
+  aminoacids = 'GASPVTCILNDKQEMHFRYW'  #this are all the aminoacids  
+  print mass, aminoacids
+  
+  maxLength = 100
+  import itertools
+  total = 0
+  pepList = []
+  for i in range(maxLength+1):
+    for p in itertools.combinations_with_replacement(aminoacids, i): 
+    #order matters for the total number of peptides but not for calculating the total mass
+      amino = ''.join(p)      
+      if PeptideMass(amino, im_tbl) == mass:
+        pepList.append(amino)
+    print 'Iter: {} |{}|'.format(i,len(pepList))
+
+  newpepList = []
+  for i in pepList:
+    for p in itertools.permutations(i, r = len(i)): 
+    #I use permutations here to get the total number because order matters
+      if p not in newpepList:
+        newpepList.append(p)
+        total +=1
+
+  print (total)
+  
+  
+  
+  
+  
+      
 def main_spectrum(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -119,9 +159,10 @@ def main_spectrum(myfile):
     peptide = inFile.readline().strip()  
   subpeptides = Subpeptides(peptide)
   im_tbl = Integer_mass_table()
-  masses = Masses(subpeptides,im_tbl)  
+  masses = Weigths(subpeptides,im_tbl)    
   with open(outputFile,'w') as outFile:    
-    outFile.write(' '.join([str(m) for m in sorted(masses)]))
+    txt = ' '.join([str(m) for m in sorted([masses[x] for x in masses])])    
+    outFile.write(txt)
   
 '''
 main_translateprotein('sample_translateprotein')
@@ -130,6 +171,7 @@ main_peptideencoding('sample_peptideencoding')
 main_peptideencoding('dataset_96_7')
 main_CountSubpeptides('sample_cntsubpeptides')
 main_CountSubpeptides('dataset_98_3')
-'''
 main_spectrum('sample_spectrum')
 main_spectrum('dataset_98_4')
+'''
+main_CountSubpeptidesWithMass('sample_mass')
