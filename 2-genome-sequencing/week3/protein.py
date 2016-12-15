@@ -8,6 +8,16 @@ def RNA_codon_table():
       tbl[rna]=codon
   return tbl
 
+def Integer_mass_table():
+  tbl = {}
+  with open('integer_mass_table.txt') as inFile:
+    for line in inFile: 
+      line = line.strip().split(' ')
+      integer = line[0]
+      mass = line[1]
+      tbl[integer]=mass
+  return tbl
+  
 def TranslateRNAToCodon(txt,tbl):
   sol = ''
   i = 0  
@@ -75,9 +85,20 @@ def main_peptideencoding(myfile):
   with open(outputFile,'w') as outFile:
     outFile.write('\n'.join(sol))
 
+def main_CountSubpeptides(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  with open(inputFile) as inFile:
+    n = int(inFile.readline().strip())  
+  N=n*(n-1)
+  with open(outputFile,'w') as outFile:
+    outFile.write(str(N))
 	
-#main_translateprotein('sample_translateprotein')
-#main_translateprotein('dataset_96_4')
-
+'''
+main_translateprotein('sample_translateprotein')
+main_translateprotein('dataset_96_4')
 main_peptideencoding('sample_peptideencoding')
 main_peptideencoding('dataset_96_7')
+'''
+main_CountSubpeptides('sample_cntsubpeptides')
+main_CountSubpeptides('dataset_98_3')
