@@ -84,7 +84,27 @@ def Weigths(peptides,im_tbl):
   for peptide in peptides:
     weights[peptide] = PeptideMass(peptide,im_tbl)
   return weights
-  
+
+
+def CyclopeptideSequencing(cyclospec):
+  import itertools
+  from math import sqrt
+  parent_mass = cyclospec[-1]
+  sol=[]  
+  # Let n be the length of a given peptide, and L be the length of its cyclospectrum.  Then L = n(n-1) + 2.
+  # Using the quadratic formula to to solve for n:  n = (sqrt(4L-7) + 1)/2
+  n = int((sqrt(4*len(cyclospec)-7)+1)/2)  
+  print n, len(cyclospec)
+  for comb in itertools.combinations(cyclospec[1:-1], n): 
+    total_mass = 0
+    for mass in comb :
+      total_mass += mass      
+    if total_mass == parent_mass :  
+      perm = itertools.permutations(comb, n)
+      for peptide in perm:          
+        sol.append('-'.join([str(x) for x in peptide]))
+  return sol
+      
 def main_translateprotein(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -162,7 +182,19 @@ def main_spectrum(myfile):
   with open(outputFile,'w') as outFile:    
     txt = ' '.join([str(m) for m in sorted([masses[x] for x in masses])])    
     outFile.write(txt)
-  
+
+def main_CyclopeptideSequencing(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  with open(inputFile) as inFile:
+    spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
+
+  sol = CyclopeptideSequencing(spectrum)
+  with open(outputFile,'w') as outFile:
+    txt= '\n'.join(sol)
+    print txt
+    outFile.write(txt)
+    
 '''
 main_translateprotein('sample_translateprotein')
 main_translateprotein('dataset_96_4')
@@ -173,6 +205,9 @@ main_CountSubpeptides('dataset_98_3',1)
 main_spectrum('sample_spectrum')
 main_spectrum('dataset_98_4')
 main_CountSubpeptidesWithMass('sample_mass') # not working properly 
-'''
 main_CountSubpeptides('sample_cntsubpeptides_path',0)
 main_CountSubpeptides('dataset_100_3',0)
+'''
+
+main_CyclopeptideSequencing('sample_cyclopeptideseq')
+main_CyclopeptideSequencing('dataset_100_6')
