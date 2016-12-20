@@ -56,6 +56,7 @@ def PeptideEncoding(txt,codon,tbl):
     str = txt[i:(i+nCodon)]
     trs_str = trs_txt[i:(i+nCodon)]
     rev_str = rev_txt[(n-i):(n-i+nCodon)]
+    rev_str = rev_txt[(n-i):(n-i+nCodon)]
         
     if TranslateRNAToCodon(trs_str,tbl) == codon : 
       substrs.append(str)
@@ -64,7 +65,7 @@ def PeptideEncoding(txt,codon,tbl):
   
   return substrs
  
-def Subpeptides(peptide):
+def SubpeptidesCyclic(peptide):
   subpeptides = ['',peptide]  
   N = len(peptide)
   peptide+=peptide
@@ -73,36 +74,68 @@ def Subpeptides(peptide):
       subpeptides.append(peptide[i:i+n])  
   return subpeptides
 
-def PeptideMass(peptide,im_tbl):  
-  mass = 0
+def SubpeptidesNotCyclic(peptide):
+  subpeptides = ['',peptide]  
+  N = len(peptide)  
+  for n in range(1,N):
+    for i in range(N-n+1):
+      subpeptides.append(peptide[i:i+n])  
+  return subpeptides
+  
+def PeptideMassAux(peptide,im_tbl):  
+  mass = []
   for char in peptide:      
-    mass += im_tbl[char]
+    mass.append(im_tbl[char])
   return mass
 
+def PeptideMass(peptide,im_tbl):  
+  mass = PeptideMassAux(peptide,im_tbl)  
+  return sum(x for x in mass)
+  
 def Weigths(peptides,im_tbl):
   weights = {}
   for peptide in peptides:
     weights[peptide] = PeptideMass(peptide,im_tbl)
   return weights
 
-
+def CyclopeptideSequencingExpandAndBound(peptides,aminos,cyclospec,im_tbl):
+  expand={}
+  for a in aminos: 
+    for p in peptides:      
+      pa = p+a      
+      if ConsistentToSpectrum(pa,cyclospec[:],im_tbl):        
+        expand[pa]='-'.join([str(x) for x in PeptideMassAux(pa,im_tbl)])
+  return expand
+  
+def ConsistentToSpectrum(peptide,spectrum,im_tbl):  
+  subpeptides = SubpeptidesNotCyclic(peptide)   
+  for sub in subpeptides:
+    mass = PeptideMass(sub,im_tbl)
+    if mass not in spectrum:      
+      return False
+    spectrum.remove(mass)  
+  return True
+  
 def CyclopeptideSequencing(cyclospec):
-  import itertools
-  from math import sqrt
-  parent_mass = cyclospec[-1]
-  sol=[]  
-  # Let n be the length of a given peptide, and L be the length of its cyclospectrum.  Then L = n(n-1) + 2.
-  # Using the quadratic formula to to solve for n:  n = (sqrt(4L-7) + 1)/2
-  n = int((sqrt(4*len(cyclospec)-7)+1)/2)  
-  print n, len(cyclospec)
-  for comb in itertools.combinations(cyclospec[1:-1], n): 
-    total_mass = 0
-    for mass in comb :
-      total_mass += mass      
-    if total_mass == parent_mass :  
-      perm = itertools.permutations(comb, n)
-      for peptide in perm:          
-        sol.append('-'.join([str(x) for x in peptide]))
+  im_tbl = Integer_mass_table()
+  L = len(cyclospec)
+  print 'Spectrum:',cyclospec
+
+  all_aminos='GASPVTCINDKEMHFRYW' #this are all the aminoacids
+  aminos=[]
+  peptides={}
+  for a in all_aminos:
+    mass = PeptideMass(a,im_tbl)    
+    if mass in cyclospec :       
+      peptides[a] = mass
+      aminos.append(a)
+  aminos=all_aminos  
+  
+  while len(peptides)>0:    
+    sol = peptides.copy()
+    peptides = CyclopeptideSequencingExpandAndBound(peptides,aminos,cyclospec,im_tbl)        
+    #print '#{}'.format(len(peptides)), ' '.join('{}:{}'.format(x,peptides[x]) for x in peptides)     
+  
   return sol
       
 def main_translateprotein(myfile):
@@ -147,7 +180,7 @@ def main_CountSubpeptidesWithMass(myfile):
   im_tbl = Integer_mass_table()
   
   aminoacids = 'GASPVTCILNDKQEMHFRYW'  #this are all the aminoacids  
-  print mass, aminoacids
+  print mass, aminoacids, len(aminoacids)
   
   maxLength = 100
   import itertools
@@ -176,7 +209,7 @@ def main_spectrum(myfile):
   outputFile = myfile + '.out'
   with open(inputFile) as inFile:
     peptide = inFile.readline().strip()  
-  subpeptides = Subpeptides(peptide)
+  subpeptides = SubpeptidesCyclic(peptide)
   im_tbl = Integer_mass_table()
   masses = Weigths(subpeptides,im_tbl)    
   with open(outputFile,'w') as outFile:    
@@ -190,9 +223,10 @@ def main_CyclopeptideSequencing(myfile):
     spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
 
   sol = CyclopeptideSequencing(spectrum)
-  with open(outputFile,'w') as outFile:
-    txt= '\n'.join(sol)
-    print txt
+  
+  with open(outputFile,'w') as outFile:    
+    txt=' '.join(sorted('{}'.format(sol[x]) for x in sol))
+    print '#{} solutions: {}\n'.format(len(sol),txt)
     outFile.write(txt)
     
 '''
@@ -210,4 +244,6 @@ main_CountSubpeptides('dataset_100_3',0)
 '''
 
 main_CyclopeptideSequencing('sample_cyclopeptideseq')
+main_CyclopeptideSequencing('sample_cyclopeptideseq2')
+main_CyclopeptideSequencing('leaderboard_spectrum')
 main_CyclopeptideSequencing('dataset_100_6')
