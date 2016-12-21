@@ -253,7 +253,50 @@ def main_CyclopeptideSequencing(myfile):
     txt=' '.join(sorted('{}'.format(sol[x]) for x in sol))
     print '#{} solutions: {}\n'.format(len(sol),txt)
     outFile.write(txt)
+
+def main_test():
+  tbl = RNA_codon_table()
+  im_tbl = Integer_mass_table()
+  
+  print '\n#1 True or False: Tyrocidine B1 is synthesized by NRP synthetase.'
+  print True
+  
+  print '\n#2 Which of the following RNA strings could translate into the amino acid string PRTEIN?'
+  for txt in ['CCGAGGACCGAAAUCAAC','CCCCGUACGGAGAUGAAA','CCCAGGACUGAGAUCAAU','CCCAGUACCGAAAUUAAC'] :
+    translated=TranslateRNAToCodon(txt,tbl)
+    print '{}->{} {}'.format(txt,translated,translated=='PRTEIN')
+
+  print '\n#3 How many DNA strings transcribe and translate into the amino acid string MASS?'
+  txt='GASPVTCINDKEMHFRYW' #this are all the aminoacids
+  codon='MASS'  
     
+  print '\n#4What is the integer mass of glutamine?'
+  # Glutamine (abbreviated as Gln or Q; encoded by the codons CAA and CAG)  
+  print PeptideMass('Q',im_tbl)  
+  
+  print '\n#5 Which of the following cyclic peptides could have generated the theoretical spectrum'
+  theoretical_spectrum=[0,71,101,113,131,184,202,214,232,285,303,315,345,416]
+  for peptide in ['MTAI','TMLA','TLAM','TMIA','TAIM','MAIT']:
+    subpeptides = SubpeptidesCyclic(peptide)
+    masses = Weigths(subpeptides,im_tbl)
+    spectrum = sorted([masses[sub] for sub in masses])        
+    if all([x in theoretical_spectrum for x in spectrum]): 
+      print '{} matches spectrum'.format(peptide)
+    else :
+      print '{} does not match spectrum'.format(peptide)
+      
+  print '\n#6 Which of the following linear peptides is consistent with Spectrum?'
+  theoretical_spectrum=[0,71,99,101,103,128,129,199,200,204,227,230,231,298,303,328,330,332,333]
+  print theoretical_spectrum
+  for peptide in ['QCV','TCQ','AQV','TCE','VAQ','CTV']:
+    subpeptides = SubpeptidesNotCyclic(peptide)
+    masses = Weigths(subpeptides,im_tbl)
+    spectrum = sorted([masses[sub] for sub in masses])            
+    if all([x in theoretical_spectrum for x in spectrum]): 
+      print '{} matches spectrum'.format(peptide)
+    else :
+      print '{} does not match spectrum'.format(peptide)
+  
 '''
 main_translateprotein('sample_translateprotein')
 main_translateprotein('dataset_96_4')
@@ -263,9 +306,7 @@ main_CountSubpeptides('sample_cntsubpeptides_cyclic',1)
 main_CountSubpeptides('dataset_98_3',1)
 main_spectrum('sample_spectrum',True)
 main_spectrum('dataset_98_4',True)
-'''
 main_CountSubpeptidesWithMass('sample_mass') # not working properly 
-'''
 main_CountSubpeptides('sample_cntsubpeptides_path',0)
 main_CountSubpeptides('dataset_100_3',0)
 main_CyclopeptideSequencing('sample_cyclopeptideseq')
@@ -275,3 +316,4 @@ main_CyclopeptideSequencing('dataset_100_6')
 main_spectrum('sample_linearspectrum',False)
 main_spectrum('dataset_4912_2',False)
 '''
+main_test()
