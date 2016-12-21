@@ -204,18 +204,23 @@ def main_CountSubpeptidesWithMass(myfile):
 
   print (total)
       
-def main_spectrum(myfile):
+def main_spectrum(myfile,Cyclic):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   with open(inputFile) as inFile:
     peptide = inFile.readline().strip()  
-  subpeptides = SubpeptidesCyclic(peptide)
+  
+  if Cyclic: 
+    subpeptides = SubpeptidesCyclic(peptide)
+  else :
+    subpeptides = SubpeptidesNotCyclic(peptide)
+
   im_tbl = Integer_mass_table()
   masses = Weigths(subpeptides,im_tbl)    
   with open(outputFile,'w') as outFile:    
     txt = ' '.join([str(m) for m in sorted([masses[x] for x in masses])])    
     outFile.write(txt)
-
+  
 def main_CyclopeptideSequencing(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -236,14 +241,16 @@ main_peptideencoding('sample_peptideencoding')
 main_peptideencoding('dataset_96_7')
 main_CountSubpeptides('sample_cntsubpeptides_cyclic',1)
 main_CountSubpeptides('dataset_98_3',1)
-main_spectrum('sample_spectrum')
-main_spectrum('dataset_98_4')
+main_spectrum('sample_spectrum',True)
+main_spectrum('dataset_98_4',True)
 main_CountSubpeptidesWithMass('sample_mass') # not working properly 
 main_CountSubpeptides('sample_cntsubpeptides_path',0)
 main_CountSubpeptides('dataset_100_3',0)
-'''
-
 main_CyclopeptideSequencing('sample_cyclopeptideseq')
 main_CyclopeptideSequencing('sample_cyclopeptideseq2')
 main_CyclopeptideSequencing('leaderboard_spectrum')
 main_CyclopeptideSequencing('dataset_100_6')
+'''
+
+main_spectrum('sample_linearspectrum',False)
+main_spectrum('dataset_4912_2',False)
