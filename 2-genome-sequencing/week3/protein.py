@@ -172,37 +172,57 @@ def main_CountSubpeptides(myfile,IsCyclic):
   with open(outputFile,'w') as outFile:
     outFile.write(str(N))
 
+    
+def ComputerNumberCompomers(M):
+  import numpy as np
+  import math  
+  
+  im_tbl = Integer_mass_table()  
+  PEP_NAMES = 'GASPVTCINDKEMHFRYW' #this are all the aminoacids
+  PEP_NAMES = 'GASPVTCILNDKQEMHFRYW' #this are all the aminoacids
+  PEP_MASSES = []  
+  for a in PEP_NAMES :    
+    PEP_MASSES.append(PeptideMass(a,im_tbl))
+  LEN_PEP_MASSES = len(PEP_MASSES)
+  NUM_COMB       = 2**LEN_PEP_MASSES-1
+  
+  # numpy array containing all possible coeficients  
+  C = np.array([[int(x) for x in np.binary_repr(K, width=LEN_PEP_MASSES)] for K in xrange(NUM_COMB)])
+  # each element is an array of coefficients representing a number between 0 and NUM_COMB in binary form
+  print "type(C)      = ",type(C)
+  print "type(C[0])   = ",type(C[0])
+  print "C.shape      = ",str(C.shape)
+  print "C[0].shape   = ",str(C[0].shape)
+  print "C[0]         = ",C[0]
+  print "C[15]        = ",C[15]
+  print "C[255]       = ",C[255]
+  
+  # Calculate sum of all combinations
+  PROD = C.dot(PEP_MASSES)
+
+  # find the ones that match M
+  valid_combinations = [(i,x) for i,x in enumerate(PROD) if x == M]
+  print 'Found {} possibilities with total mass = {}'.format(len(valid_combinations), M)
+  #print valid_combinations
+  total=0  
+  for comb_index, comb_mass in valid_combinations:
+    # work back the combinations in string format
+    comb_str = [PEP_NAMES[i] for i,x in enumerate(C[comb_index]) if x==1]    
+    total+= math.factorial(len(comb_str))
+    #print '{} --> {}'.format(comb_index, ''.join(comb_str))
+  
+  print 'Total permutations: {}'.format(total)
+  return total
+    
 def main_CountSubpeptidesWithMass(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   with open(inputFile) as inFile:
-    mass = int(inFile.readline().strip())  
-  im_tbl = Integer_mass_table()
+    mass = int(inFile.readline().strip())
   
-  aminoacids = 'GASPVTCILNDKQEMHFRYW'  #this are all the aminoacids  
-  print mass, aminoacids, len(aminoacids)
-  
-  maxLength = 100
-  import itertools
-  total = 0
-  pepList = []
-  for i in range(maxLength+1):
-    for p in itertools.combinations_with_replacement(aminoacids, i): 
-    #order matters for the total number of peptides but not for calculating the total mass
-      amino = ''.join(p)      
-      if PeptideMass(amino, im_tbl) == mass:
-        pepList.append(amino)
-    print 'Iter: {} |{}|'.format(i,len(pepList))
-
-  newpepList = []
-  for i in pepList:
-    for p in itertools.permutations(i, r = len(i)): 
-    #I use permutations here to get the total number because order matters
-      if p not in newpepList:
-        newpepList.append(p)
-        total +=1
-
-  print (total)
+  total = ComputerNumberCompomers(mass)
+  with open(outputFile,'w') as outFile:        
+    outFile.write(str(total))    
       
 def main_spectrum(myfile,Cyclic):
   inputFile = myfile + '.txt'
@@ -243,14 +263,15 @@ main_CountSubpeptides('sample_cntsubpeptides_cyclic',1)
 main_CountSubpeptides('dataset_98_3',1)
 main_spectrum('sample_spectrum',True)
 main_spectrum('dataset_98_4',True)
+'''
 main_CountSubpeptidesWithMass('sample_mass') # not working properly 
+'''
 main_CountSubpeptides('sample_cntsubpeptides_path',0)
 main_CountSubpeptides('dataset_100_3',0)
 main_CyclopeptideSequencing('sample_cyclopeptideseq')
 main_CyclopeptideSequencing('sample_cyclopeptideseq2')
 main_CyclopeptideSequencing('leaderboard_spectrum')
 main_CyclopeptideSequencing('dataset_100_6')
-'''
-
 main_spectrum('sample_linearspectrum',False)
 main_spectrum('dataset_4912_2',False)
+'''
