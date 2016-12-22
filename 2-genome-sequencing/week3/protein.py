@@ -1,42 +1,7 @@
-def aminoacids_tbl(im_tbl,unique):
-  aminos = []
-  weights = []
-  tbl = {}
-  with open('amino_acids.txt') as inFile:
-    for line in inFile: 
-      line = line.strip().split(' ')
-      char = line[0]
-      shrt = line[1]
-      name = line[2]      
-      mass = PeptideMass(char,im_tbl)
-      if unique==False or mass not in weights : 
-        aminos.append(char)
-        weights.append(mass)
-        tbl[char] = (shrt,name,mass)
-  
-  print '{} amino acids: {}'.format(len(aminos),''.join(aminos))
-  return aminos,tbl
-  
-def RNA_codon_table():
-  tbl = {}
-  with open('RNA_codon_table_1.txt') as inFile:
-    for line in inFile: 
-      line = line.strip().split(' ')      
-      rna = line[0]
-      codon = '' if len(line) == 1 else line[1]
-      tbl[rna]=codon
-  return tbl
+import sys
+sys.path.insert(0,'../')
+from common import RNA_codon_table, Integer_mass_table, aminoacids_tbl, PeptideMassAux, PeptideMass
 
-def Integer_mass_table():
-  tbl = {}
-  with open('integer_mass_table.txt') as inFile:
-    for line in inFile: 
-      line = line.strip().split(' ')
-      integer = line[0]
-      mass = int(line[1])
-      tbl[integer]=mass
-  return tbl
-  
 def TranslateRNAToCodon(txt,tbl):
   sol = ''
   i = 0  
@@ -100,16 +65,6 @@ def SubpeptidesNotCyclic(peptide):
     for i in range(N-n+1):
       subpeptides.append(peptide[i:i+n])  
   return subpeptides
-  
-def PeptideMassAux(peptide,im_tbl):  
-  mass = []
-  for char in peptide:      
-    mass.append(im_tbl[char])
-  return mass
-
-def PeptideMass(peptide,im_tbl):  
-  mass = PeptideMassAux(peptide,im_tbl)  
-  return sum(x for x in mass)
   
 def Weigths(peptides,im_tbl):
   weights = {}
@@ -347,24 +302,23 @@ def main_cnt():
       
   print bb,  len(bb)   
 
-'''
-main_translateprotein('sample_translateprotein')
-main_translateprotein('dataset_96_4')
-main_peptideencoding('sample_peptideencoding')
-main_peptideencoding('dataset_96_7')
-main_CountSubpeptides('sample_cntsubpeptides_cyclic',1)
-main_CountSubpeptides('dataset_98_3',1)
-main_spectrum('sample_spectrum',True)
-main_spectrum('dataset_98_4',True)
-main_CountSubpeptidesWithMass('sample_mass') # not working properly 
-main_CountSubpeptides('sample_cntsubpeptides_path',0)
-main_CountSubpeptides('dataset_100_3',0)
-main_CyclopeptideSequencing('sample_cyclopeptideseq')
-main_CyclopeptideSequencing('sample_cyclopeptideseq2')
-main_CyclopeptideSequencing('leaderboard_spectrum')
-main_CyclopeptideSequencing('dataset_100_6')
-main_spectrum('sample_linearspectrum',False)
-main_spectrum('dataset_4912_2',False)
-main_test()
-'''
-main_cnt()
+if __name__ == '__main__':
+  main_translateprotein('sample_translateprotein')
+  main_translateprotein('dataset_96_4')
+  main_peptideencoding('sample_peptideencoding')
+  main_peptideencoding('dataset_96_7')
+  main_CountSubpeptides('sample_cntsubpeptides_cyclic',1)
+  main_CountSubpeptides('dataset_98_3',1)
+  main_spectrum('sample_spectrum',True)
+  main_spectrum('dataset_98_4',True)
+  main_CountSubpeptidesWithMass('sample_mass') # not working properly 
+  main_CountSubpeptides('sample_cntsubpeptides_path',0)
+  main_CountSubpeptides('dataset_100_3',0)
+  main_CyclopeptideSequencing('sample_cyclopeptideseq')
+  main_CyclopeptideSequencing('sample_cyclopeptideseq2')
+  main_CyclopeptideSequencing('leaderboard_spectrum')
+  main_CyclopeptideSequencing('dataset_100_6')
+  main_spectrum('sample_linearspectrum',False)
+  main_spectrum('dataset_4912_2',False)
+  main_test()
+  main_cnt()
