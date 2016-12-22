@@ -1,3 +1,22 @@
+def aminoacids_tbl(im_tbl,unique):
+  aminos = []
+  weights = []
+  tbl = {}
+  with open('amino_acids.txt') as inFile:
+    for line in inFile: 
+      line = line.strip().split(' ')
+      char = line[0]
+      shrt = line[1]
+      name = line[2]      
+      mass = PeptideMass(char,im_tbl)
+      if unique==False or mass not in weights : 
+        aminos.append(char)
+        weights.append(mass)
+        tbl[char] = (shrt,name,mass)
+  
+  print '{} amino acids: {}'.format(len(aminos),''.join(aminos))
+  return aminos,tbl
+  
 def RNA_codon_table():
   tbl = {}
   with open('RNA_codon_table_1.txt') as inFile:
@@ -103,12 +122,16 @@ def CyclopeptideSequencingExpandAndBound(peptides,aminos,cyclospec,im_tbl):
   for a in aminos: 
     for p in peptides:      
       pa = p+a      
-      if ConsistentToSpectrum(pa,cyclospec[:],im_tbl):        
+      if ConsistentToSpectrum(pa,cyclospec[:],im_tbl,False):
         expand[pa]='-'.join([str(x) for x in PeptideMassAux(pa,im_tbl)])
   return expand
   
-def ConsistentToSpectrum(peptide,spectrum,im_tbl):  
-  subpeptides = SubpeptidesNotCyclic(peptide)   
+def ConsistentToSpectrum(peptide,spectrum,im_tbl,Cyclic):
+  if Cyclic: 
+    subpeptides = SubpeptidesCyclic(peptide)
+  else :
+    subpeptides = SubpeptidesNotCyclic(peptide)
+    
   for sub in subpeptides:
     mass = PeptideMass(sub,im_tbl)
     if mass not in spectrum:      
@@ -121,7 +144,7 @@ def CyclopeptideSequencing(cyclospec):
   L = len(cyclospec)
   print 'Spectrum:',cyclospec
 
-  all_aminos='GASPVTCINDKEMHFRYW' #this are all the aminoacids
+  all_aminos, aminos_tbl = aminoacids_tbl(im_tbl,True)
   aminos=[]
   peptides={}
   for a in all_aminos:
@@ -129,7 +152,6 @@ def CyclopeptideSequencing(cyclospec):
     if mass in cyclospec :       
       peptides[a] = mass
       aminos.append(a)
-  aminos=all_aminos  
   
   while len(peptides)>0:    
     sol = peptides.copy()
@@ -177,9 +199,9 @@ def ComputerNumberCompomers(M):
   import numpy as np
   import math  
   
-  im_tbl = Integer_mass_table()  
-  PEP_NAMES = 'GASPVTCINDKEMHFRYW' #this are all the aminoacids
-  PEP_NAMES = 'GASPVTCILNDKQEMHFRYW' #this are all the aminoacids
+  im_tbl = Integer_mass_table()    
+  PEP_NAMES, aminos_tbl = aminoacids_tbl(im_tbl,False)
+  
   PEP_MASSES = []  
   for a in PEP_NAMES :    
     PEP_MASSES.append(PeptideMass(a,im_tbl))
@@ -254,49 +276,66 @@ def main_CyclopeptideSequencing(myfile):
     print '#{} solutions: {}\n'.format(len(sol),txt)
     outFile.write(txt)
 
-def main_test():
-  tbl = RNA_codon_table()
+def CountStringsTranscribeToTxt(txt,rna_tbl):
+  from numpy import prod
+  cnt=[]
+  for t in txt:
+    cnt.append(sum([rna_tbl[x] == t for x in rna_tbl]))
+  total=prod(cnt)
+  print '{}: #{}={}'.format(txt,cnt,total)
+  return total
+    
+def main_test():  
+  rna_tbl = RNA_codon_table()
   im_tbl = Integer_mass_table()
+  all_aminos, aminos_tbl = aminoacids_tbl(im_tbl,False)
   
   print '\n#1 True or False: Tyrocidine B1 is synthesized by NRP synthetase.'
   print True
   
   print '\n#2 Which of the following RNA strings could translate into the amino acid string PRTEIN?'
   for txt in ['CCGAGGACCGAAAUCAAC','CCCCGUACGGAGAUGAAA','CCCAGGACUGAGAUCAAU','CCCAGUACCGAAAUUAAC'] :
-    translated=TranslateRNAToCodon(txt,tbl)
+    translated=TranslateRNAToCodon(txt,rna_tbl)
     print '{}->{} {}'.format(txt,translated,translated=='PRTEIN')
 
-  print '\n#3 How many DNA strings transcribe and translate into the amino acid string MASS?'
-  txt='GASPVTCINDKEMHFRYW' #this are all the aminoacids
-  codon='MASS'  
+  print '\n#3 How many DNA strings transcribe and translate into the amino acid string MASS?'  
+  txt='MASS'
+  total = CountStringsTranscribeToTxt(txt,rna_tbl)
     
-  print '\n#4What is the integer mass of glutamine?'
+  print '\n#4 What is the integer mass of glutamine?'
   # Glutamine (abbreviated as Gln or Q; encoded by the codons CAA and CAG)  
-  print PeptideMass('Q',im_tbl)  
+  char = [a for a in all_aminos if aminos_tbl[a][0] == 'Gln'][0]
+  print '{}: {} mass'.format(char,PeptideMass(char,im_tbl))
   
   print '\n#5 Which of the following cyclic peptides could have generated the theoretical spectrum'
   theoretical_spectrum=[0,71,101,113,131,184,202,214,232,285,303,315,345,416]
-  for peptide in ['MTAI','TMLA','TLAM','TMIA','TAIM','MAIT']:
-    subpeptides = SubpeptidesCyclic(peptide)
-    masses = Weigths(subpeptides,im_tbl)
-    spectrum = sorted([masses[sub] for sub in masses])        
-    if all([x in theoretical_spectrum for x in spectrum]): 
+  for peptide in ['MTAI','TMLA','TLAM','TMIA','TAIM','MAIT']:    
+    if ConsistentToSpectrum(peptide,theoretical_spectrum[:],im_tbl,True): 
       print '{} matches spectrum'.format(peptide)
     else :
       print '{} does not match spectrum'.format(peptide)
-      
+ 
   print '\n#6 Which of the following linear peptides is consistent with Spectrum?'
   theoretical_spectrum=[0,71,99,101,103,128,129,199,200,204,227,230,231,298,303,328,330,332,333]
-  print theoretical_spectrum
-  for peptide in ['QCV','TCQ','AQV','TCE','VAQ','CTV']:
-    subpeptides = SubpeptidesNotCyclic(peptide)
-    masses = Weigths(subpeptides,im_tbl)
-    spectrum = sorted([masses[sub] for sub in masses])            
-    if all([x in theoretical_spectrum for x in spectrum]): 
+  for peptide in ['QCV','TCQ','AQV','TCE','VAQ','CTV']:    
+    if ConsistentToSpectrum(peptide,theoretical_spectrum[:],im_tbl,False): 
       print '{} matches spectrum'.format(peptide)
     else :
-      print '{} does not match spectrum'.format(peptide)
+      print '{} does not match spectrum'.format(peptide)    
   
+
+def main_cnt():
+  rna_tbl = RNA_codon_table()
+  im_tbl = Integer_mass_table()
+  all_aminos, aminos_tbl = aminoacids_tbl(im_tbl,False)
+  amino=''
+  for shrt in ['Val','Lys','Leu','Phe','Pro','Trp','Phe','Asn','Gln','Tyr'] :
+    amino+=[a for a in all_aminos if aminos_tbl[a][0] == shrt][0]  
+  CountStringsTranscribeToTxt(amino,rna_tbl)  
+  
+  #Bacillus_brevis
+  
+
 '''
 main_translateprotein('sample_translateprotein')
 main_translateprotein('dataset_96_4')
@@ -316,4 +355,5 @@ main_CyclopeptideSequencing('dataset_100_6')
 main_spectrum('sample_linearspectrum',False)
 main_spectrum('dataset_4912_2',False)
 '''
-main_test()
+#main_test()
+main_cnt()

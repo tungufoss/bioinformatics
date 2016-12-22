@@ -1,0 +1,20 @@
+G Gly Glycine
+A Ala Alanine
+S Ser Serine
+P Pro Proline
+V Val Valine
+T Thr Threonine
+C Cys Cysteine
+I Ile Isoleucine 
+L Leu Leucine
+N Asn Asparagine
+D Asp Apartic acid
+K Lys Lysine
+Q Gln Glutamine
+E Glu Glutamic acid
+M Met Methionine
+H His Histidine
+F Phe Phenylalanine
+R Arg Arginine
+Y Tyr Tyrosine
+W Trp Tryptophan
