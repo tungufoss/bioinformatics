@@ -1,0 +1,32 @@
+20 amino acids: GASPVTCILNDKQEMHFRYW
+
+#1 True or False: Tyrocidine B1 is synthesized by NRP synthetase.
+True
+
+#2 Which of the following RNA strings could translate into the amino acid string PRTEIN?
+CCCAGUACCGAAAUUAAC->PSTEIN False
+CCCCGUACGGAGAUGAAA->PRTEMK False
+CCCAGGACUGAGAUCAAU->PRTEIN True
+CCGAGGACCGAAAUCAAC->PRTEIN True
+
+#3 How many DNA strings transcribe and translate into the amino acid string MASS?
+SYNGE: #[6, 2, 2, 4, 2]=192
+
+#4 What is the integer mass of glycine?
+G: 57 mass
+
+#5 Which of the following cyclic peptides could have generated the theoretical spectrum
+MAIT matches spectrum
+TAIM does not match spectrum
+ALTM matches spectrum
+MTAI does not match spectrum
+TMLA does not match spectrum
+MLAT does not match spectrum
+
+#6 Which of the following linear peptides is consistent with Spectrum?
+CTV matches spectrum
+VAQ does not match spectrum
+TCE does not match spectrum
+TCQ matches spectrum
+AQV matches spectrum
+QCV does not match spectrum

@@ -177,7 +177,7 @@ def main_peptideencoding(myfile):
     txt = inFile.readline().strip()
     codon = inFile.readline().strip()
   tbl = RNA_codon_table()
-  sol = PeptideEncoding(txt,codon,tbl)  
+  sol = PeptideEncoding(txt,codon,tbl)    
   with open(outputFile,'w') as outFile:
     outFile.write('\n'.join(sol))
 
@@ -294,22 +294,21 @@ def main_test():
   print True
   
   print '\n#2 Which of the following RNA strings could translate into the amino acid string PRTEIN?'
-  for txt in ['CCGAGGACCGAAAUCAAC','CCCCGUACGGAGAUGAAA','CCCAGGACUGAGAUCAAU','CCCAGUACCGAAAUUAAC'] :
+  for txt in ['CCCAGUACCGAAAUUAAC','CCCCGUACGGAGAUGAAA','CCCAGGACUGAGAUCAAU','CCGAGGACCGAAAUCAAC'] :
     translated=TranslateRNAToCodon(txt,rna_tbl)
     print '{}->{} {}'.format(txt,translated,translated=='PRTEIN')
 
   print '\n#3 How many DNA strings transcribe and translate into the amino acid string MASS?'  
-  txt='MASS'
+  txt='SYNGE'
   total = CountStringsTranscribeToTxt(txt,rna_tbl)
     
-  print '\n#4 What is the integer mass of glutamine?'
-  # Glutamine (abbreviated as Gln or Q; encoded by the codons CAA and CAG)  
-  char = [a for a in all_aminos if aminos_tbl[a][0] == 'Gln'][0]
+  print '\n#4 What is the integer mass of glycine?'  
+  char = [a for a in all_aminos if aminos_tbl[a][1] == 'Glycine'][0]
   print '{}: {} mass'.format(char,PeptideMass(char,im_tbl))
   
   print '\n#5 Which of the following cyclic peptides could have generated the theoretical spectrum'
   theoretical_spectrum=[0,71,101,113,131,184,202,214,232,285,303,315,345,416]
-  for peptide in ['MTAI','TMLA','TLAM','TMIA','TAIM','MAIT']:    
+  for peptide in ['MAIT','TAIM','ALTM','MTAI','TMLA','MLAT']:    
     if ConsistentToSpectrum(peptide,theoretical_spectrum[:],im_tbl,True): 
       print '{} matches spectrum'.format(peptide)
     else :
@@ -317,7 +316,7 @@ def main_test():
  
   print '\n#6 Which of the following linear peptides is consistent with Spectrum?'
   theoretical_spectrum=[0,71,99,101,103,128,129,199,200,204,227,230,231,298,303,328,330,332,333]
-  for peptide in ['QCV','TCQ','AQV','TCE','VAQ','CTV']:    
+  for peptide in ['CTV','VAQ','TCE','TCQ','AQV','QCV']:    
     if ConsistentToSpectrum(peptide,theoretical_spectrum[:],im_tbl,False): 
       print '{} matches spectrum'.format(peptide)
     else :
@@ -328,13 +327,11 @@ def main_cnt():
   rna_tbl = RNA_codon_table()
   im_tbl = Integer_mass_table()
   all_aminos, aminos_tbl = aminoacids_tbl(im_tbl,False)
-  amino=''
+  TyrocidineB1=''
   for shrt in ['Val','Lys','Leu','Phe','Pro','Trp','Phe','Asn','Gln','Tyr'] :
-    amino+=[a for a in all_aminos if aminos_tbl[a][0] == shrt][0]  
-  CountStringsTranscribeToTxt(amino,rna_tbl)  
-  
-  #Bacillus_brevis
-  
+    TyrocidineB1+=[a for a in all_aminos if aminos_tbl[a][0] == shrt][0]  
+  CountStringsTranscribeToTxt(TyrocidineB1,rna_tbl)  
+   
 
 '''
 main_translateprotein('sample_translateprotein')
@@ -355,5 +352,5 @@ main_CyclopeptideSequencing('dataset_100_6')
 main_spectrum('sample_linearspectrum',False)
 main_spectrum('dataset_4912_2',False)
 '''
-#main_test()
-main_cnt()
+main_test()
+#main_cnt()
