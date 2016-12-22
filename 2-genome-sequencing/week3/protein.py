@@ -328,10 +328,24 @@ def main_cnt():
   im_tbl = Integer_mass_table()
   all_aminos, aminos_tbl = aminoacids_tbl(im_tbl,False)
   TyrocidineB1=''
-  for shrt in ['Val','Lys','Leu','Phe','Pro','Trp','Phe','Asn','Gln','Tyr'] :
+  for shrt in ['Val','Lys','Leu','Phe','Pro','Trp','Phe','Asn','Gln','Tyr'] :               
     TyrocidineB1+=[a for a in all_aminos if aminos_tbl[a][0] == shrt][0]  
   CountStringsTranscribeToTxt(TyrocidineB1,rna_tbl)  
-   
+    
+  n = len(TyrocidineB1)
+  TyrocidineB1+=TyrocidineB1
+  bb=[]
+  with open('Bacillus_brevis.txt') as inFile:
+    for line in inFile:
+      txt = line.strip()
+      for i in range(n) :
+        codon = TyrocidineB1[i:i+n]        
+        sol = PeptideEncoding(txt,codon,rna_tbl)      
+        if len(sol)>0:
+          bb.append(sol)
+          continue
+      
+  print bb,  len(bb)   
 
 '''
 main_translateprotein('sample_translateprotein')
@@ -351,6 +365,6 @@ main_CyclopeptideSequencing('leaderboard_spectrum')
 main_CyclopeptideSequencing('dataset_100_6')
 main_spectrum('sample_linearspectrum',False)
 main_spectrum('dataset_4912_2',False)
-'''
 main_test()
-#main_cnt()
+'''
+main_cnt()
