@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0,'../')
-from common import RNA_codon_table, Integer_mass_table, aminoacids_tbl, PeptideMassAux, PeptideMass
+from common import RNA_codon_table, Integer_mass_table, aminoacids_tbl, PeptideMassAux, PeptideMass, PeptidesMasses
 
 def TranslateRNAToCodon(txt,tbl):
   sol = ''
@@ -66,12 +66,6 @@ def SubpeptidesNotCyclic(peptide):
       subpeptides.append(peptide[i:i+n])  
   return subpeptides
   
-def Weigths(peptides,im_tbl):
-  weights = {}
-  for peptide in peptides:
-    weights[peptide] = PeptideMass(peptide,im_tbl)
-  return weights
-
 def CyclopeptideSequencingExpandAndBound(peptides,aminos,cyclospec,im_tbl):
   expand={}
   for a in aminos: 
@@ -86,7 +80,7 @@ def ConsistentToSpectrum(peptide,spectrum,im_tbl,Cyclic):
     subpeptides = SubpeptidesCyclic(peptide)
   else :
     subpeptides = SubpeptidesNotCyclic(peptide)
-    
+ 
   for sub in subpeptides:
     mass = PeptideMass(sub,im_tbl)
     if mass not in spectrum:      
@@ -213,9 +207,10 @@ def main_spectrum(myfile,Cyclic):
     subpeptides = SubpeptidesNotCyclic(peptide)
 
   im_tbl = Integer_mass_table()
-  masses = Weigths(subpeptides,im_tbl)    
+  masses = PeptidesMasses(subpeptides,im_tbl)
+    
   with open(outputFile,'w') as outFile:    
-    txt = ' '.join([str(m) for m in sorted([masses[x] for x in masses])])    
+    txt = ' '.join(str(m) for m in sorted(masses))    
     outFile.write(txt)
   
 def main_CyclopeptideSequencing(myfile):
@@ -303,14 +298,18 @@ def main_cnt():
   print bb,  len(bb)   
 
 if __name__ == '__main__':
+  '''
   main_translateprotein('sample_translateprotein')
   main_translateprotein('dataset_96_4')
   main_peptideencoding('sample_peptideencoding')
   main_peptideencoding('dataset_96_7')
   main_CountSubpeptides('sample_cntsubpeptides_cyclic',1)
   main_CountSubpeptides('dataset_98_3',1)
-  main_spectrum('sample_spectrum',True)
+  '''
+  main_spectrum('sample_spectrum',True)  
+  main_spectrum('theoretical_spectrum',True)
   main_spectrum('dataset_98_4',True)
+  '''
   main_CountSubpeptidesWithMass('sample_mass') # not working properly 
   main_CountSubpeptides('sample_cntsubpeptides_path',0)
   main_CountSubpeptides('dataset_100_3',0)
@@ -318,7 +317,10 @@ if __name__ == '__main__':
   main_CyclopeptideSequencing('sample_cyclopeptideseq2')
   main_CyclopeptideSequencing('leaderboard_spectrum')
   main_CyclopeptideSequencing('dataset_100_6')
+  '''
   main_spectrum('sample_linearspectrum',False)
   main_spectrum('dataset_4912_2',False)
+  '''
   main_test()
   main_cnt()
+  '''

@@ -46,3 +46,9 @@ def PeptideMassAux(peptide,im_tbl):
 def PeptideMass(peptide,im_tbl):  
   mass = PeptideMassAux(peptide,im_tbl)  
   return sum(x for x in mass)
+  
+def PeptidesMasses(peptides,im_tbl):  
+  mass=[]
+  for peptide in peptides :
+    mass.append(PeptideMass(peptide,im_tbl))
+  return mass
