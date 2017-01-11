@@ -3,6 +3,7 @@ sys.path.insert(0,'../')
 from common import RNA_codon_table, Integer_mass_table, aminoacids_tbl, PeptidesMasses, PeptideMass
 sys.path.insert(0,'../week3')
 from protein import SubpeptidesCyclic, SubpeptidesNotCyclic
+import timeit
 
 def CyclopeptideScoring(peptide,spectrum,im_tbl,Cyclic):
   spectrum=spectrum[:]
@@ -71,21 +72,32 @@ def main_CyclopeptideScoringProblem(myfile,Cyclic):
 def main_LeaderboardCyclopeptideSequencing(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
+  start = timeit.default_timer()
+  
   with open(inputFile) as inFile:
     N = int(inFile.readline().strip())
     spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
   
-  im_tbl = Integer_mass_table()
-  leader_peptide=LeaderboardCyclopeptideSequencing(spectrum,N,im_tbl)
+  im_tbl = Integer_mass_table()  
+  leader_peptide = LeaderboardCyclopeptideSequencing(spectrum,N,im_tbl)
+  
   with open(outputFile,'w') as outFile:    
     txt='-'.join([str(p) for p in leader_peptide])
     outFile.write(txt)
     print txt
   
+  stop = timeit.default_timer()
+  print 'Running time {} sec'.format(stop - start)
+ 
+ 
 '''
 main_CyclopeptideScoringProblem('sample_cyclopeptidescoring',True) #11
 main_CyclopeptideScoringProblem('cyclopeptide_scoring',True) #521
 main_CyclopeptideScoringProblem('dataset_102_3',True)
 '''
-main_LeaderboardCyclopeptideSequencing('sample_linearpeptidescoring')
+#main_LeaderboardCyclopeptideSequencing('sample_linearpeptidescoring')
 #main_LeaderboardCyclopeptideSequencing('dataset_102_8')
+main_CyclopeptideScoringProblem('linear_score',False) #8
+main_CyclopeptideScoringProblem('dataset_4913_1',False) #8
+
+
