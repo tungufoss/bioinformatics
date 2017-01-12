@@ -32,50 +32,53 @@ def LeaderBoardExpand(LeaderBoard,aminos):
   return expand
 
 def LeaderBoardTrim(scored_LeaderBoard, N):  
+  if len(scored_LeaderBoard) <= N:
+    return scored_LeaderBoard    
   # sort LeaderBoard according to the decreasing order of scores in LinearScores
   scored_LeaderBoard = sorted(scored_LeaderBoard, key=lambda x: x[1], reverse=True) 
-  # return top N peptides
-  return scored_LeaderBoard[:N]
+  # return top N peptides     
+  Nth_score = scored_LeaderBoard[N-1][1] # score
+  # allow ties 
+  scored_LeaderBoard = [x for x in scored_LeaderBoard if x[1] >= Nth_score]  
+  return scored_LeaderBoard
   
-def LeaderBoardCyclopeptideSequencing(spectrum,N,Cyclic):  
-  spectrum = sorted(spectrum)  
-  LeaderPeptide = ''  
-  LeaderScore = CyclopeptideScoring(LeaderPeptide, spectrum, Cyclic)
+def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic):  
+  spectrum = sorted(spectrum)    
+  LeaderScore = CyclopeptideScoring('', spectrum, Cyclic)
   LeaderPeptides = []
-  
-  LeaderBoard = [(LeaderPeptide, LeaderScore, 0)]
+    
+  LeaderBoard = [('', LeaderScore, 0)]
   ParentMass = spectrum[-1]  
   
   aminos, aminos_tbl = aminoacids_tbl(im_tbl,True)
-  aminos = [a for a in aminos if aminos_tbl[a][2] in spectrum]
+  aminos = [a for a in aminos if aminos_tbl[a][2]] # in spectrum]
   
   while len(LeaderBoard)>0:       
     # expand LeaderBoard
     LeaderBoard = [(
       peptide, 
-      CyclopeptideScoring(peptide, spectrum, Cyclic), # score
-      PeptideMass(peptide,im_tbl) # mass      
+      CyclopeptideScoring(peptide, spectrum, False), # linear scoring for trimming
+      PeptideMass(peptide,im_tbl), # mass       
+      CyclopeptideScoring(peptide, spectrum, Cyclic), # <cyclic?> score is only used for comparing with the leader peptide(s).
     ) for peptide in LeaderBoardExpand([x[0] for x in LeaderBoard],aminos)]
   
     # If if Mass(Peptide) = ParentMass(Spectrum) and Score(Peptide, Spectrum) > Score(LeaderPeptide, Spectrum) then update LeaderPeptide        
-    for (peptide,score) in [(x[0],x[1]) for x in LeaderBoard if x[2] == ParentMass and x[1] > LeaderScore]:
-      if score > LeaderScore:
-        LeaderPeptide = peptide
+    for (peptide,score) in [(x[0],x[3]) for x in LeaderBoard if x[2] == ParentMass and x[3] >= LeaderScore]:      
+      if score > LeaderScore:    
         LeaderScore = score
         LeaderPeptides = []
         LeaderPeptides.append(peptide)
       elif score == LeaderScore:
-        LeaderPeptides.append(peptide)
-      
+        LeaderPeptides.append(peptide)      
+           
     # remove Peptide from LeaderBoard if Mass(Peptide) > ParentMass(Spectrum)                        
     LeaderBoard = [x for x in LeaderBoard if x[2] <= ParentMass]
     
     # Trim LeaderBoard w.r.t. N        
     LeaderBoard = LeaderBoardTrim(LeaderBoard, N)
 
-  print 'Total of {} leader peptides with score {}'.format(len(LeaderPeptides), LeaderScore)
-  result = ['-'.join([str(aminos_tbl[a][2]) for a in peptide]) for peptide in LeaderPeptides]  
-  return result
+  print 'Total of {} leader peptides with score {}'.format(len(LeaderPeptides), LeaderScore)  
+  return ['-'.join([str(aminos_tbl[a][2]) for a in peptide]) for peptide in LeaderPeptides]  
   
 def main_CyclopeptideScoringProblem(myfile,Cyclic):
   inputFile = myfile + '.txt'
