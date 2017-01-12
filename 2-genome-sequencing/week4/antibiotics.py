@@ -37,7 +37,6 @@ def LeaderBoardTrim(scored_LeaderBoard, N):
   # sort LeaderBoard according to the decreasing order of scores in LinearScores
   scored_LeaderBoard = sorted(scored_LeaderBoard, key=lambda x: x[1], reverse=True) 
   # return top N peptides     
-  return scored_LeaderBoard[:N]
   Nth_score = scored_LeaderBoard[N-1][1] # score
   # allow ties 
   scored_LeaderBoard = [x for x in scored_LeaderBoard if x[1] >= Nth_score]  
