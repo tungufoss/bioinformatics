@@ -49,7 +49,7 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
     
   LeaderBoard = [('', LeaderScore, 0)]
   ParentMass = spectrum[-1]  
-    
+  print 'ParentMass: {} da'.format(ParentMass)
   while len(LeaderBoard)>0:       
     # expand LeaderBoard
     LeaderBoard = [(
@@ -83,6 +83,18 @@ def SpectralConvolution(spectrum):
   # If an element has multiplicity k, it should appear exactly k times
   convolution = [i-j for i in spectrum for j in spectrum if i-j > 0]  
   return convolution
+
+# Get the top M elements from the convolution that are between 57 and 200.
+def TopConvolution(convolution,M):
+  from collections import Counter
+  import operator  
+  cnt = Counter([x for x in convolution if x>=57 and x<=200])  
+  cnt = sorted(cnt.items(), key=operator.itemgetter(1), reverse=True)
+  if len(cnt)>=M :
+    return [x[0] for x in cnt]
+    
+  Mth_value = cnt[M-1][1] # include ties 
+  return [x[0] for x in cnt if x[1] >= Mth_value]
   
 def main_CyclopeptideScoringProblem(myfile,Cyclic):
   inputFile = myfile + '.txt'
@@ -153,13 +165,42 @@ def main_SpectralConvolution(myfile):
   with open(inputFile) as inFile:
     spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
   
-  spectrum = SpectralConvolution(spectrum)
+  convolution = SpectralConvolution(spectrum)
   
   with open(outputFile,'w') as outFile:    
-    txt=' '.join([str(x) for x in spectrum])
+    txt=' '.join([str(x) for x in convolution])
     outFile.write(txt)
-    print txt
+
+def main_ConvolutionCyclopeptideSequencing(myfile):  
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  start = timeit.default_timer()
   
+  with open(inputFile) as inFile:
+    M = int(inFile.readline().strip())
+    N = int(inFile.readline().strip())
+    spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
+  
+  convolution = SpectralConvolution(spectrum)
+  convolution = TopConvolution(convolution, M)  
+  
+  aminos_tbl={}
+  im_tbl={}
+  for da in convolution:      
+    aminos_tbl[chr(da)]=(chr(da),chr(da),da)
+    im_tbl[chr(da)]=da
+  
+  leader_peptides = LeaderBoardCyclopeptideSequencing(spectrum,N,True,aminos_tbl,im_tbl)
+  print leader_peptides, '#{}'.format(len(leader_peptides))
+  leader_peptide = leader_peptides[0]
+  
+  with open(outputFile,'w') as outFile:        
+    outFile.write(leader_peptide)
+    print leader_peptide
+
+  stop = timeit.default_timer()
+  print 'Running time {} sec'.format(stop - start)  
+    
 '''
 main_CyclopeptideScoringProblem('sample_cyclopeptidescoring',True) #11
 main_CyclopeptideScoringProblem('cyclopeptide_scoring',True) #521
@@ -168,10 +209,12 @@ main_CyclopeptideScoringProblem('linear_score',False) #8
 main_CyclopeptideScoringProblem('dataset_4913_1',False) #8
 main_Trim('sample_trim')
 main_Trim('dataset_4913_3')
-'''
-#main_LeaderBoardCyclopeptideSequencing('sample_linearpeptidescoring',False,False)
-#main_LeaderBoardCyclopeptideSequencing('dataset_102_8',False,False)
-#main_LeaderBoardCyclopeptideSequencing('dataset_102_10',True,True)
-#main_LeaderBoardCyclopeptideSequencing('dataset_103_2',True,True,True)
+main_LeaderBoardCyclopeptideSequencing('sample_linearpeptidescoring',False,False)
+main_LeaderBoardCyclopeptideSequencing('dataset_102_8',False,False)
+main_LeaderBoardCyclopeptideSequencing('dataset_102_10',True,True)
+main_LeaderBoardCyclopeptideSequencing('dataset_103_2',True,True,True)
 main_SpectralConvolution('sample_spectralconvolution')
 main_SpectralConvolution('dataset_104_4')
+'''
+main_ConvolutionCyclopeptideSequencing('sample_ConvolutionCyclopeptideSequencing')
+main_ConvolutionCyclopeptideSequencing('dataset_104_7')
