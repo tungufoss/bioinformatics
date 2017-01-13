@@ -76,6 +76,13 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
 
   print 'Total of {} leader peptides with score {}'.format(len(LeaderPeptides), LeaderScore)  
   return ['-'.join([str(aminos_tbl[a][2]) for a in peptide]) for peptide in LeaderPeptides]  
+
+#The list of elements in the convolution of Spectrum. 
+def SpectralConvolution(spectrum):  
+  # The spectrum isn't sorted, so find all differences and filter out the non-positive.
+  # If an element has multiplicity k, it should appear exactly k times
+  convolution = [i-j for i in spectrum for j in spectrum if i-j > 0]  
+  return convolution
   
 def main_CyclopeptideScoringProblem(myfile,Cyclic):
   inputFile = myfile + '.txt'
@@ -139,6 +146,19 @@ def main_Trim(myfile):
     txt=' '.join([x[0] for x in trimmed])
     outFile.write(txt)
     print txt
+
+def main_SpectralConvolution(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  with open(inputFile) as inFile:
+    spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
+  
+  spectrum = SpectralConvolution(spectrum)
+  
+  with open(outputFile,'w') as outFile:    
+    txt=' '.join([str(x) for x in spectrum])
+    outFile.write(txt)
+    print txt
   
 '''
 main_CyclopeptideScoringProblem('sample_cyclopeptidescoring',True) #11
@@ -152,4 +172,6 @@ main_Trim('dataset_4913_3')
 #main_LeaderBoardCyclopeptideSequencing('sample_linearpeptidescoring',False,False)
 #main_LeaderBoardCyclopeptideSequencing('dataset_102_8',False,False)
 #main_LeaderBoardCyclopeptideSequencing('dataset_102_10',True,True)
-main_LeaderBoardCyclopeptideSequencing('dataset_103_2',True,True,True)
+#main_LeaderBoardCyclopeptideSequencing('dataset_103_2',True,True,True)
+main_SpectralConvolution('sample_spectralconvolution')
+main_SpectralConvolution('dataset_104_4')
