@@ -5,9 +5,7 @@ sys.path.insert(0,'../week3')
 from protein import SubpeptidesCyclic, SubpeptidesNotCyclic
 import timeit
 
-im_tbl = Integer_mass_table()  
-
-def CyclopeptideScoring(peptide,spectrum,Cyclic):
+def CyclopeptideScoring(peptide,spectrum,Cyclic,im_tbl):
   spectrum=spectrum[:]
   if Cyclic: 
     subpeptides = SubpeptidesCyclic(peptide)
@@ -36,30 +34,29 @@ def LeaderBoardTrim(scored_LeaderBoard, N):
     return scored_LeaderBoard    
   # sort LeaderBoard according to the decreasing order of scores in LinearScores
   scored_LeaderBoard = sorted(scored_LeaderBoard, key=lambda x: x[1], reverse=True) 
-  # return top N peptides     
+  # return top N peptides       
   Nth_score = scored_LeaderBoard[N-1][1] # score
   # allow ties 
   scored_LeaderBoard = [x for x in scored_LeaderBoard if x[1] >= Nth_score]  
   return scored_LeaderBoard
   
-def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic):  
+def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):  
+  aminos = aminos_tbl.keys()
+    
   spectrum = sorted(spectrum)    
-  LeaderScore = CyclopeptideScoring('', spectrum, Cyclic)
+  LeaderScore = CyclopeptideScoring('', spectrum, Cyclic,im_tbl)
   LeaderPeptides = []
     
   LeaderBoard = [('', LeaderScore, 0)]
   ParentMass = spectrum[-1]  
-  
-  aminos, aminos_tbl = aminoacids_tbl(im_tbl,True)
-  aminos = [a for a in aminos if aminos_tbl[a][2]] # in spectrum]
-  
+    
   while len(LeaderBoard)>0:       
     # expand LeaderBoard
     LeaderBoard = [(
       peptide, 
-      CyclopeptideScoring(peptide, spectrum, False), # linear scoring for trimming
+      CyclopeptideScoring(peptide, spectrum, False,im_tbl), # linear scoring for trimming
       PeptideMass(peptide,im_tbl), # mass       
-      CyclopeptideScoring(peptide, spectrum, Cyclic), # <cyclic?> score is only used for comparing with the leader peptide(s).
+      CyclopeptideScoring(peptide, spectrum, Cyclic,im_tbl), # <cyclic?> score is only used for comparing with the leader peptide(s).
     ) for peptide in LeaderBoardExpand([x[0] for x in LeaderBoard],aminos)]
   
     # If if Mass(Peptide) = ParentMass(Spectrum) and Score(Peptide, Spectrum) > Score(LeaderPeptide, Spectrum) then update LeaderPeptide        
@@ -91,7 +88,7 @@ def main_CyclopeptideScoringProblem(myfile,Cyclic):
   with open(outputFile,'w') as outFile:    
     outFile.write(str(score))
   
-def main_LeaderBoardCyclopeptideSequencing(myfile,Cyclic,print_all):
+def main_LeaderBoardCyclopeptideSequencing(myfile,Cyclic,print_all,synthetic_aminos=False):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   start = timeit.default_timer()
@@ -99,16 +96,25 @@ def main_LeaderBoardCyclopeptideSequencing(myfile,Cyclic,print_all):
   with open(inputFile) as inFile:
     N = int(inFile.readline().strip())
     spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
-    
-  leader_peptides = LeaderBoardCyclopeptideSequencing(spectrum,N,Cyclic)
+   
+  if synthetic_aminos: 
+    aminos_tbl={}
+    im_tbl={}
+    for da in range(57,201):      
+      aminos_tbl[chr(da)]=(chr(da),chr(da),da)
+      im_tbl[chr(da)]=da
+  else :
+    im_tbl = Integer_mass_table()  
+    aminos, aminos_tbl = aminoacids_tbl(im_tbl,True)
+  
+  leader_peptides = LeaderBoardCyclopeptideSequencing(spectrum,N,Cyclic,aminos_tbl,im_tbl)
   
   with open(outputFile,'w') as outFile:
     if print_all:
       txt = ' '.join(leader_peptides)
     else:
       txt = leader_peptides[0]
-    outFile.write(txt)
-    print txt
+    outFile.write(txt)    
   
   stop = timeit.default_timer()
   print 'Running time {} sec'.format(stop - start)
@@ -145,8 +151,5 @@ main_Trim('dataset_4913_3')
 '''
 #main_LeaderBoardCyclopeptideSequencing('sample_linearpeptidescoring',False,False)
 #main_LeaderBoardCyclopeptideSequencing('dataset_102_8',False,False)
-#main_LeaderBoardCyclopeptideSequencing('Tyrocidine_B1_Spectrum_25',True,True)
-main_LeaderBoardCyclopeptideSequencing('dataset_102_10',True,True)
-
-
-
+#main_LeaderBoardCyclopeptideSequencing('dataset_102_10',True,True)
+main_LeaderBoardCyclopeptideSequencing('dataset_103_2',True,True,True)
