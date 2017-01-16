@@ -93,12 +93,12 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
     LeaderBoard = LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,Cyclic,im_tbl)
     
     # If if Mass(Peptide) = ParentMass(Spectrum) and Score(Peptide, Spectrum) > Score(LeaderPeptide, Spectrum) then update LeaderPeptide        
-    for (peptide,score) in [(x[4],x[3]) for x in LeaderBoard if x[2] == ParentMass and x[3] >= LeaderScore]:      
-      if score > LeaderScore:    
+    for (peptide,score,linear_score) in [(x[4],x[3],x[1]) for x in LeaderBoard if x[2] == ParentMass and x[3] >= LeaderScore]:      
+      if score > LeaderScore:        
         LeaderScore = score
         LeaderPeptides = []
         LeaderPeptides.append(peptide)
-        print 'Peptide {} has score {} after {} min'.format('-'.join([str(x) for x in peptide]),score,(timeit.default_timer()-start)/60)
+        print 'Peptide {} has score {}/{} after {} min'.format('-'.join([str(x) for x in peptide]),score,linear_score,(timeit.default_timer()-start)/60)
       elif score == LeaderScore:
         LeaderPeptides.append(peptide)      
            
@@ -205,7 +205,7 @@ def main_SpectralConvolution(myfile):
     txt=' '.join([str(x) for x in convolution])
     outFile.write(txt)
 
-def main_ConvolutionCyclopeptideSequencing(myfile):  
+def main_ConvolutionCyclopeptideSequencing(myfile,print_all=False):  
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   start = timeit.default_timer()
@@ -237,12 +237,16 @@ def main_ConvolutionCyclopeptideSequencing(myfile):
   else :
     leader_peptide = leader_peptides[0]
   
-  with open(outputFile,'w') as outFile:        
-    outFile.write(leader_peptide)
-    print leader_peptide
+  with open(outputFile,'w') as outFile:
+    if print_all:
+      txt = ' '.join(leader_peptides)
+    else :
+      txt = leader_peptide
+    outFile.write(txt)
+    print txt
 
   stop = timeit.default_timer()
-  print 'Running time {} sec'.format(stop - start)  
+  print 'Running time {} min'.format((stop - start)/60)  
     
 '''
 main_CyclopeptideScoringProblem('sample_cyclopeptidescoring',True) #11
@@ -261,4 +265,5 @@ main_SpectralConvolution('dataset_104_4')
 '''
 #main_ConvolutionCyclopeptideSequencing('sample_ConvolutionCyclopeptideSequencing')
 #main_ConvolutionCyclopeptideSequencing('convolution_cyclopeptide_sequencing')
-main_ConvolutionCyclopeptideSequencing('dataset_104_7')
+#main_ConvolutionCyclopeptideSequencing('dataset_104_7')
+main_ConvolutionCyclopeptideSequencing('dataset_104_8',True)
