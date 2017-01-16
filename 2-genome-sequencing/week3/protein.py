@@ -49,8 +49,9 @@ def PeptideEncoding(txt,codon,tbl):
   
   return substrs
  
-def SubpeptidesCyclic(peptide):
-  subpeptides = ['',peptide]  
+def SubpeptidesCyclic(peptide,init=''):  
+  peptide=peptide[:]
+  subpeptides = [init,peptide[:]]
   N = len(peptide)
   peptide+=peptide
   for n in range(1,N):
@@ -58,8 +59,8 @@ def SubpeptidesCyclic(peptide):
       subpeptides.append(peptide[i:i+n])  
   return subpeptides
 
-def SubpeptidesNotCyclic(peptide):
-  subpeptides = ['',peptide]  
+def SubpeptidesNotCyclic(peptide,init=''):  
+  subpeptides = [init,peptide[:]]  
   N = len(peptide)  
   for n in range(1,N):
     for i in range(N-n+1):

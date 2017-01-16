@@ -22,42 +22,47 @@ def CyclopeptideScoring(peptide,spectrum,Cyclic,im_tbl):
   #print '{} has score {} for spectrum'.format(peptide,score)
   return score
 
-def CyclopeptideScoring2(peptide,spectrum,Cyclic,im_tbl):
-  spectrum=spectrum[:]
-  
-  subpeptides_nc = SubpeptidesNotCyclic(peptide)
-  subpeptides_c = SubpeptidesCyclic(peptide)
+def CyclopeptideScoring2(masses,spectrum,Cyclic):
+  spectrum = spectrum[:]
+  subpeptides_nc = SubpeptidesNotCyclic(masses,[0])
+  subpeptides_c = SubpeptidesCyclic(masses,[0])
   
   score_nc=0
   for sub in subpeptides_nc:
     subpeptides_c.remove(sub)
-    mass = PeptideMass(sub,im_tbl)
-    if mass in spectrum:      
+    mass = sum(sub)
+    if mass in spectrum:
       score_nc+=1
       spectrum.remove(mass)  
   
   score_c = score_nc  
   if Cyclic:  
     for sub in subpeptides_c:
-      mass = PeptideMass(sub,im_tbl)
+      mass = sum(sub)
       if mass in spectrum:      
         score_c+=1
         spectrum.remove(mass)
   
   return score_nc, score_c
   
-def LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,im_tbl,Cyclic):
+def LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,Cyclic,im_tbl):
   expand = []
+  N = len(LeaderBoard)*len(aminos_tbl)
+  
   for x in LeaderBoard:
-    for a in aminos_tbl :            
-      pa = x[0]+a   
-      score_nc, score_c = CyclopeptideScoring2(pa, spectrum, Cyclic, im_tbl)
+    for a in aminos_tbl:
+      pa = x[0]+a
+      ma = aminos_tbl[a][2]
+      pm = x[4][:]
+      pm.append(ma)
+      score_nc, score_c = CyclopeptideScoring2(pm, spectrum, Cyclic)
       expand.append(
         (
           pa,
           score_nc, # linear scoring for trimming
-          x[2]+aminos_tbl[a][2], # i.e. PeptideMass(pa,im_tbl)
+          x[2]+ma, # i.e. PeptideMass(pa,im_tbl)
           score_c, # <cyclic?> score is only used for comparing with the leader peptide(s).
+          pm
         )
       )  
   return expand
@@ -78,21 +83,22 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
   LeaderScore = CyclopeptideScoring('', spectrum, Cyclic,im_tbl)
   LeaderPeptides = []
     
-  LeaderBoard = [('', LeaderScore, 0, LeaderScore)]
+  LeaderBoard = [('', LeaderScore, 0, LeaderScore,[])]
   ParentMass = spectrum[-1]  
   print 'ParentMass: {} da'.format(ParentMass)
-    
+  
+  start = timeit.default_timer()  
   while len(LeaderBoard)>0:       
     # expand LeaderBoard
-    LeaderBoard = LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,im_tbl,Cyclic)
+    LeaderBoard = LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,Cyclic,im_tbl)
     
     # If if Mass(Peptide) = ParentMass(Spectrum) and Score(Peptide, Spectrum) > Score(LeaderPeptide, Spectrum) then update LeaderPeptide        
-    for (peptide,score) in [(x[0],x[3]) for x in LeaderBoard if x[2] == ParentMass and x[3] >= LeaderScore]:      
+    for (peptide,score) in [(x[4],x[3]) for x in LeaderBoard if x[2] == ParentMass and x[3] >= LeaderScore]:      
       if score > LeaderScore:    
         LeaderScore = score
         LeaderPeptides = []
         LeaderPeptides.append(peptide)
-        print ['-'.join([str(aminos_tbl[a][2]) for a in peptide])], score
+        print 'Peptide {} has score {} after {} min'.format('-'.join([str(x) for x in peptide]),score,(timeit.default_timer()-start)/60)
       elif score == LeaderScore:
         LeaderPeptides.append(peptide)      
            
@@ -103,7 +109,7 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
     LeaderBoard = LeaderBoardTrim(LeaderBoard, N)    
     
   print 'Total of {} leader peptides with score {}'.format(len(LeaderPeptides), LeaderScore)  
-  return ['-'.join([str(aminos_tbl[a][2]) for a in peptide]) for peptide in LeaderPeptides]  
+  return ['-'.join([str(x) for x in peptide]) for peptide in LeaderPeptides]  
 
 #The list of elements in the convolution of Spectrum. 
 def SpectralConvolution(spectrum):  
