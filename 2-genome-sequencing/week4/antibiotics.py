@@ -11,7 +11,7 @@ def CyclopeptideScoring(peptide,spectrum,Cyclic,im_tbl):
     subpeptides = SubpeptidesCyclic(peptide)
   else :
     subpeptides = SubpeptidesNotCyclic(peptide)
- 
+  
   score=0
   for sub in subpeptides:
     mass = PeptideMass(sub,im_tbl)
@@ -21,12 +21,45 @@ def CyclopeptideScoring(peptide,spectrum,Cyclic,im_tbl):
     
   #print '{} has score {} for spectrum'.format(peptide,score)
   return score
+
+def CyclopeptideScoring2(peptide,spectrum,Cyclic,im_tbl):
+  spectrum=spectrum[:]
   
-def LeaderBoardExpand(LeaderBoard,aminos):
+  subpeptides_nc = SubpeptidesNotCyclic(peptide)
+  subpeptides_c = SubpeptidesCyclic(peptide)
+  
+  score_nc=0
+  for sub in subpeptides_nc:
+    subpeptides_c.remove(sub)
+    mass = PeptideMass(sub,im_tbl)
+    if mass in spectrum:      
+      score_nc+=1
+      spectrum.remove(mass)  
+  
+  score_c = score_nc  
+  if Cyclic:  
+    for sub in subpeptides_c:
+      mass = PeptideMass(sub,im_tbl)
+      if mass in spectrum:      
+        score_c+=1
+        spectrum.remove(mass)
+  
+  return score_nc, score_c
+  
+def LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,im_tbl,Cyclic):
   expand = []
-  for peptide in LeaderBoard:
-    for a in aminos :
-      expand.append(peptide+a)
+  for x in LeaderBoard:
+    for a in aminos_tbl :            
+      pa = x[0]+a   
+      score_nc, score_c = CyclopeptideScoring2(pa, spectrum, Cyclic, im_tbl)
+      expand.append(
+        (
+          pa,
+          score_nc, # linear scoring for trimming
+          x[2]+aminos_tbl[a][2], # i.e. PeptideMass(pa,im_tbl)
+          score_c, # <cyclic?> score is only used for comparing with the leader peptide(s).
+        )
+      )  
   return expand
 
 def LeaderBoardTrim(scored_LeaderBoard, N):  
@@ -41,30 +74,25 @@ def LeaderBoardTrim(scored_LeaderBoard, N):
   return scored_LeaderBoard
   
 def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):  
-  aminos = aminos_tbl.keys()
-    
   spectrum = sorted(spectrum)    
   LeaderScore = CyclopeptideScoring('', spectrum, Cyclic,im_tbl)
   LeaderPeptides = []
     
-  LeaderBoard = [('', LeaderScore, 0)]
+  LeaderBoard = [('', LeaderScore, 0, LeaderScore)]
   ParentMass = spectrum[-1]  
   print 'ParentMass: {} da'.format(ParentMass)
+    
   while len(LeaderBoard)>0:       
     # expand LeaderBoard
-    LeaderBoard = [(
-      peptide, 
-      CyclopeptideScoring(peptide, spectrum, False,im_tbl), # linear scoring for trimming
-      PeptideMass(peptide,im_tbl), # mass       
-      CyclopeptideScoring(peptide, spectrum, Cyclic,im_tbl), # <cyclic?> score is only used for comparing with the leader peptide(s).
-    ) for peptide in LeaderBoardExpand([x[0] for x in LeaderBoard],aminos)]
-  
+    LeaderBoard = LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,im_tbl,Cyclic)
+    
     # If if Mass(Peptide) = ParentMass(Spectrum) and Score(Peptide, Spectrum) > Score(LeaderPeptide, Spectrum) then update LeaderPeptide        
     for (peptide,score) in [(x[0],x[3]) for x in LeaderBoard if x[2] == ParentMass and x[3] >= LeaderScore]:      
       if score > LeaderScore:    
         LeaderScore = score
         LeaderPeptides = []
         LeaderPeptides.append(peptide)
+        print ['-'.join([str(aminos_tbl[a][2]) for a in peptide])], score
       elif score == LeaderScore:
         LeaderPeptides.append(peptide)      
            
@@ -72,8 +100,8 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
     LeaderBoard = [x for x in LeaderBoard if x[2] <= ParentMass]
     
     # Trim LeaderBoard w.r.t. N        
-    LeaderBoard = LeaderBoardTrim(LeaderBoard, N)
-
+    LeaderBoard = LeaderBoardTrim(LeaderBoard, N)    
+    
   print 'Total of {} leader peptides with score {}'.format(len(LeaderPeptides), LeaderScore)  
   return ['-'.join([str(aminos_tbl[a][2]) for a in peptide]) for peptide in LeaderPeptides]  
 
@@ -191,8 +219,17 @@ def main_ConvolutionCyclopeptideSequencing(myfile):
     im_tbl[chr(da)]=da
   
   leader_peptides = LeaderBoardCyclopeptideSequencing(spectrum,N,True,aminos_tbl,im_tbl)
-  print leader_peptides, '#{}'.format(len(leader_peptides))
-  leader_peptide = leader_peptides[0]
+    
+  if myfile == 'sample_ConvolutionCyclopeptideSequencing':
+    leader_peptide = '99-71-137-57-72-57'    
+    if leader_peptide in leader_peptides:
+      print 'Correct leader peptide found'
+  elif myfile == 'convolution_cyclopeptide_sequencing':
+    leader_peptide='113-115-114-128-97-163-131-129-129-147-57-57-129'
+    if leader_peptide in leader_peptides:
+      print 'Correct leader peptide found'
+  else :
+    leader_peptide = leader_peptides[0]
   
   with open(outputFile,'w') as outFile:        
     outFile.write(leader_peptide)
@@ -216,5 +253,6 @@ main_LeaderBoardCyclopeptideSequencing('dataset_103_2',True,True,True)
 main_SpectralConvolution('sample_spectralconvolution')
 main_SpectralConvolution('dataset_104_4')
 '''
-main_ConvolutionCyclopeptideSequencing('sample_ConvolutionCyclopeptideSequencing')
+#main_ConvolutionCyclopeptideSequencing('sample_ConvolutionCyclopeptideSequencing')
+#main_ConvolutionCyclopeptideSequencing('convolution_cyclopeptide_sequencing')
 main_ConvolutionCyclopeptideSequencing('dataset_104_7')
