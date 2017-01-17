@@ -84,7 +84,7 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
   LeaderPeptides = []
     
   LeaderBoard = [('', LeaderScore, 0, LeaderScore,[])]
-  ParentMass = spectrum[-1]  
+  ParentMass = round(spectrum[-1])
   print 'ParentMass: {} da'.format(ParentMass)
   
   start = timeit.default_timer()  
@@ -93,7 +93,7 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
     LeaderBoard = LeaderBoardExpand(LeaderBoard,aminos_tbl,spectrum,Cyclic,im_tbl)
     
     # If if Mass(Peptide) = ParentMass(Spectrum) and Score(Peptide, Spectrum) > Score(LeaderPeptide, Spectrum) then update LeaderPeptide        
-    for (peptide,score,linear_score) in [(x[4],x[3],x[1]) for x in LeaderBoard if x[2] == ParentMass and x[3] >= LeaderScore]:      
+    for (peptide,score,linear_score) in [(x[4],x[3],x[1]) for x in LeaderBoard if round(x[2]) == ParentMass and x[3] >= LeaderScore]:      
       if score > LeaderScore:        
         LeaderScore = score
         LeaderPeptides = []
@@ -103,7 +103,7 @@ def LeaderBoardCyclopeptideSequencing(spectrum,N, Cyclic, aminos_tbl,im_tbl):
         LeaderPeptides.append(peptide)      
            
     # remove Peptide from LeaderBoard if Mass(Peptide) > ParentMass(Spectrum)                        
-    LeaderBoard = [x for x in LeaderBoard if x[2] <= ParentMass]
+    LeaderBoard = [x for x in LeaderBoard if round(x[2]) <= ParentMass]
     
     # Trim LeaderBoard w.r.t. N        
     LeaderBoard = LeaderBoardTrim(LeaderBoard, N)    
@@ -213,16 +213,17 @@ def main_ConvolutionCyclopeptideSequencing(myfile,print_all=False):
   with open(inputFile) as inFile:
     M = int(inFile.readline().strip())
     N = int(inFile.readline().strip())
-    spectrum = [int(x) for x in inFile.readline().strip().split(' ')]
+    spectrum = [float(x) for x in inFile.readline().strip().split(' ')]
   
   convolution = SpectralConvolution(spectrum)
   convolution = TopConvolution(convolution, M)  
   
   aminos_tbl={}
   im_tbl={}
-  for da in convolution:      
-    aminos_tbl[chr(da)]=(chr(da),chr(da),da)
-    im_tbl[chr(da)]=da
+  for da in convolution:
+    txt=chr((int)(round(da)))
+    aminos_tbl[txt]=(txt,txt,da)
+    im_tbl[txt]=da
   
   leader_peptides = LeaderBoardCyclopeptideSequencing(spectrum,N,True,aminos_tbl,im_tbl)
     
@@ -266,4 +267,5 @@ main_SpectralConvolution('dataset_104_4')
 #main_ConvolutionCyclopeptideSequencing('sample_ConvolutionCyclopeptideSequencing')
 #main_ConvolutionCyclopeptideSequencing('convolution_cyclopeptide_sequencing')
 #main_ConvolutionCyclopeptideSequencing('dataset_104_7')
-main_ConvolutionCyclopeptideSequencing('dataset_104_8',True)
+#main_ConvolutionCyclopeptideSequencing('dataset_104_8',True)
+main_ConvolutionCyclopeptideSequencing('real_spectrum',True)
