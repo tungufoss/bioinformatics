@@ -1,0 +1,9 @@
+#1	In practice, the charge of a fragment ion is irrelevant when dealing with real spectra.
+	False.
+#2	When sequencing antibiotics, biologists must account for many more acids than the standard 20 amino acid alphabet.
+	True.
+#3	If Peptide = MAMA and Spectrum = [0, 71, 178, 202, 202, 202, 333, 333, 333, 404, 507, 507],
+	then what is Score(Peptide, Spectrum)? 8
+#4	If Peptide = PEEP and Spectrum = [0, 97, 97, 129, 129, 194, 203, 226, 226, 258, 323, 323, 323, 355, 403, 452],
+	then what is LinearScore(Peptide, Spectrum)? 10
+#5	What element has largest multiplicity in the spectral convolution of Spectrum = [0, 86, 160, 234, 308, 320, 382]? 74

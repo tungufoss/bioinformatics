@@ -124,9 +124,10 @@ def TopConvolution(convolution,M):
   import operator  
   cnt = Counter([x for x in convolution if x>=57 and x<=200])  
   cnt = sorted(cnt.items(), key=operator.itemgetter(1), reverse=True)
-  if len(cnt)>=M :
+  
+  if len(cnt)<=M :
     return [x[0] for x in cnt]
-    
+  
   Mth_value = cnt[M-1][1] # include ties 
   return [x[0] for x in cnt if x[1] >= Mth_value]
   
@@ -248,7 +249,28 @@ def main_ConvolutionCyclopeptideSequencing(myfile,print_all=False):
 
   stop = timeit.default_timer()
   print 'Running time {} min'.format((stop - start)/60)  
-    
+
+def main_test():
+  print '#1\tIn practice, the charge of a fragment ion is irrelevant when dealing with real spectra.\n\tFalse.'
+  
+  print '#2\tWhen sequencing antibiotics, biologists must account for many more acids than the standard 20 amino acid alphabet.\n\tTrue.'
+  
+  im_tbl = Integer_mass_table()  
+  peptide = 'MAMA'
+  spectrum = [0,71,178,202,202,202,333,333,333,404,507,507]
+  score = CyclopeptideScoring(peptide,spectrum,True,im_tbl)  
+  print '#3\tIf Peptide = {} and Spectrum = {},\n\tthen what is Score(Peptide, Spectrum)? {}'.format(peptide,spectrum,score)
+  
+  peptide = 'PEEP'
+  spectrum = [0,97,97,129,129,194,203,226,226,258,323,323,323,355,403,452]
+  linear_score = CyclopeptideScoring(peptide,spectrum,False,im_tbl)
+  print '#4\tIf Peptide = {} and Spectrum = {},\n\tthen what is LinearScore(Peptide, Spectrum)? {}'.format(peptide,spectrum,linear_score)
+  
+  spectrum = [0,86,160,234,308,320,382]
+  convolution = SpectralConvolution(spectrum)
+  convolution = TopConvolution(convolution, 1)  
+  print '#5\tWhat element has largest multiplicity in the spectral convolution of Spectrum = {}? {}'.format(spectrum,','.join([str(x) for x in convolution]))
+  
 '''
 main_CyclopeptideScoringProblem('sample_cyclopeptidescoring',True) #11
 main_CyclopeptideScoringProblem('cyclopeptide_scoring',True) #521
@@ -267,5 +289,6 @@ main_SpectralConvolution('dataset_104_4')
 #main_ConvolutionCyclopeptideSequencing('sample_ConvolutionCyclopeptideSequencing')
 #main_ConvolutionCyclopeptideSequencing('convolution_cyclopeptide_sequencing')
 #main_ConvolutionCyclopeptideSequencing('dataset_104_7')
-#main_ConvolutionCyclopeptideSequencing('dataset_104_8',True)
-main_ConvolutionCyclopeptideSequencing('real_spectrum',True)
+#main_ConvolutionCyclopeptideSequencing('dataset_104_8',True) # not working properly 
+#main_ConvolutionCyclopeptideSequencing('real_spectrum',True) # not working properly
+main_test()
