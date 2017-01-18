@@ -65,11 +65,16 @@ def InOrder(from_node, edges, cedges, connected):
 def SuffixTrie(text):
   if text[len(text)-1] != '$':
     text += '$' # mark the end of text   
-  patterns = [text[k:] for k in range(len(text))]      
+  patterns = [text[k:] for k in range(len(text))]
   edges = TrieConstructionProblem(patterns)    
   edges = ConsolidateEdges(edges)  
   return edges
 
+def LongestRepeat(patterns):
+  from collections import Counter    
+  cnt = Counter([p for p in patterns if len(p)>1])  
+  return max(cnt).replace("$", "")
+  
 def PrintEdges(edges):
   txt=[]
   for node in sorted(edges):
@@ -116,13 +121,30 @@ def main_SuffixTreeConstructionProblem(myfile):
   with open(outputFile, 'w') as outFile:
     txt = '\n'.join(edge[1] for edge in edges)    
     outFile.write(txt)
+    
+def main_LongestRepeatProblem(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:    
+    text = inFile.readline().strip()  
+  print text
+  edges = SuffixTrie(text)  
+  long = LongestRepeat([x[1] for x in edges])
+  with open(outputFile, 'w') as outFile:
+    outFile.write(long)
+    print long
+    
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
 main_TrieConstructionProblem('dataset_294_4')
 main_TrieMatchingProblem('sample_TrieMatchingProblem')
 main_TrieMatchingProblem('dataset_294_8')
-''' 
 main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem')
 main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem2')
 main_SuffixTreeConstructionProblem('SuffixTreeConstruction')
 main_SuffixTreeConstructionProblem('dataset_296_4')
+'''
+main_LongestRepeatProblem('sample_LongestRepeatProblem')
+main_LongestRepeatProblem('dataset_296_5')
+
