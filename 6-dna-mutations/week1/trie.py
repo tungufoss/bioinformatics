@@ -26,29 +26,33 @@ def TrieMatching(text,patterns):
   
   return indices
 
-def ConsolidateEdges(edges):    
-  for (from_node,symbol,to_node) in [(x[0],x[1],edges[x]) for x in edges if x[1]=='$']:        
-    symbols = symbol
-    while True:
-      subtrees = [(y[0],y[1],edges[y]) for y in edges if y[0]==from_node]
-      connected = [(y[0],y[1],edges[y]) for y in edges if edges[y]==from_node]      
-      del edges[(from_node,symbol)]      
-      if len(subtrees) == 1 :
-        if (from_node,symbol) in edges :
-          print 'wtf'      
-        from_node, symbol, to_node = connected[0]
-        symbols = symbol+symbols                
+def ConsolidateEdges(edges):
+  cedges = {}
+  InOrder(0, edges, cedges)  
+  return cedges
+
+def InOrder(from_node,ti,tnew):  
+  children = [(y[0],y[1],ti[y]) for y in ti if y[0] == from_node]    
+  symbols=''
+  nChildren = len(children)
+  for child in children :    
+    from_node, symbol, to_node = child
+    nSubtrees, symbols = InOrder(to_node, ti, tnew)
+    if nSubtrees <= 1:      
+      symbols = symbol+symbols    
+    if nChildren>1 :
+      if nSubtrees > 1 :
+        tnew[(from_node,symbol)]=to_node
       else :
-        edges[(from_node,symbols)]=to_node        
-        break    
-  return edges
+        tnew[(from_node,symbols)]=to_node      
+  return len(children), symbols
   
 def SuffixTrie(text):
   if text[len(text)-1] != '$':
     text += '$' # mark the end of text   
   patterns = [text[k:] for k in range(len(text))]      
-  edges = TrieConstructionProblem(patterns)  
-  edges = ConsolidateEdges(edges)  
+  edges = TrieConstructionProblem(patterns)    
+  edges = ConsolidateEdges(edges)    
   return edges
 
 def PrintEdges(edges):
@@ -95,8 +99,8 @@ def main_SuffixTreeConstructionProblem(myfile):
   
   # output: The edge labels of SuffixTree(Text)
   with open(outputFile, 'w') as outFile:
-    for edge in edges:
-      outFile.write(edge[1])
+    txt = '\n'.join(edge[1] for edge in edges)
+    outFile.write(txt)
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
 main_TrieConstructionProblem('dataset_294_4')
