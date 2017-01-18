@@ -1,3 +1,5 @@
+Inf = -1
+
 def TrieConstructionProblem(patterns):
   edges = {}
   nNodes = 0
@@ -28,39 +30,50 @@ def TrieMatching(text,patterns):
 
 def ConsolidateEdges(edges):
   cedges = {}
-  InOrder(0, edges, cedges)  
+  connected = {}
+  for edge in edges:
+    from_edge = edge[0]
+    to_edge = edges[edge]
+    y = (to_edge, edge[1])
+    if from_edge not in connected :
+      connected[from_edge]=[y]
+    else :
+      connected[from_edge].append(y)
+      
+  InOrder(0, edges, cedges, connected)
   return cedges
 
-def InOrder(from_node,ti,tnew):  
-  children = [(y[0],y[1],ti[y]) for y in ti if y[0] == from_node]    
-  symbols=''
+def InOrder(from_node, edges, cedges, connected):  
+  if from_node not in connected :
+    return 0, ''  
+  children = connected[from_node]
   nChildren = len(children)
-  for child in children :    
-    from_node, symbol, to_node = child
-    nSubtrees, symbols = InOrder(to_node, ti, tnew)
+  for child in children :     
+    to_node, symbol = child
+    nSubtrees, symbols = InOrder(to_node, edges, cedges, connected)
     if nSubtrees <= 1:      
       symbols = symbol+symbols    
     if nChildren>1 :
       if nSubtrees > 1 :
-        tnew[(from_node,symbol)]=to_node
+        cedges[(from_node,symbol)]=to_node
       else :
-        tnew[(from_node,symbols)]=to_node      
+        cedges[(from_node,symbols)]=to_node      
   return len(children), symbols
   
 def SuffixTrie(text):
   if text[len(text)-1] != '$':
     text += '$' # mark the end of text   
   patterns = [text[k:] for k in range(len(text))]      
-  edges = TrieConstructionProblem(patterns)    
-  edges = ConsolidateEdges(edges)    
+  edges = TrieConstructionProblem(patterns)  
+  edges = ConsolidateEdges(edges)
   return edges
 
 def PrintEdges(edges):
   txt=[]
   for node in sorted(edges):
     txt.append('{}->{}:{}'.format(node[0],edges[node],node[1]))
-  return '\n'.join(txt)  
-  
+  return '\n'.join(txt)
+ 
 def main_TrieConstructionProblem(myfile):  
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -87,7 +100,7 @@ def main_TrieMatchingProblem(myfile):
   with open(outputFile, 'w') as outFile:
     txt = ' '.join([str(x) for x in sorted(indices)])    
     outFile.write(txt)
-  
+    
 def main_SuffixTreeConstructionProblem(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -99,7 +112,7 @@ def main_SuffixTreeConstructionProblem(myfile):
   
   # output: The edge labels of SuffixTree(Text)
   with open(outputFile, 'w') as outFile:
-    txt = '\n'.join(edge[1] for edge in edges)
+    txt = '\n'.join(edge[1] for edge in edges)    
     outFile.write(txt)
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
