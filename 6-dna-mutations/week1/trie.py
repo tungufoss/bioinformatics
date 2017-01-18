@@ -43,29 +43,31 @@ def ConsolidateEdges(edges):
   InOrder(0, edges, cedges, connected)
   return cedges
 
-def InOrder(from_node, edges, cedges, connected):  
+def InOrder(from_node, edges, cedges, connected):   
   if from_node not in connected :
     return 0, ''  
-  children = connected[from_node]
-  nChildren = len(children)
+    
+  children = connected[from_node]  
   for child in children :     
     to_node, symbol = child
     nSubtrees, symbols = InOrder(to_node, edges, cedges, connected)
+    
     if nSubtrees <= 1:      
-      symbols = symbol+symbols    
-    if nChildren>1 :
-      if nSubtrees > 1 :
-        cedges[(from_node,symbol)]=to_node
-      else :
-        cedges[(from_node,symbols)]=to_node      
+      symbols = symbol+symbols
+    else :
+      symbols = symbol
+      
+    if len(children)  > 1 :
+      cedges[(from_node,symbols)]=to_node      
+    
   return len(children), symbols
   
 def SuffixTrie(text):
   if text[len(text)-1] != '$':
     text += '$' # mark the end of text   
   patterns = [text[k:] for k in range(len(text))]      
-  edges = TrieConstructionProblem(patterns)  
-  edges = ConsolidateEdges(edges)
+  edges = TrieConstructionProblem(patterns)    
+  edges = ConsolidateEdges(edges)  
   return edges
 
 def PrintEdges(edges):
@@ -109,7 +111,7 @@ def main_SuffixTreeConstructionProblem(myfile):
     text = inFile.readline().strip()  
   print text
   edges = SuffixTrie(text)
-  
+    
   # output: The edge labels of SuffixTree(Text)
   with open(outputFile, 'w') as outFile:
     txt = '\n'.join(edge[1] for edge in edges)    
@@ -121,4 +123,6 @@ main_TrieMatchingProblem('sample_TrieMatchingProblem')
 main_TrieMatchingProblem('dataset_294_8')
 ''' 
 main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem')
+main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem2')
+main_SuffixTreeConstructionProblem('SuffixTreeConstruction')
 main_SuffixTreeConstructionProblem('dataset_296_4')
