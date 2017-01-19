@@ -70,10 +70,18 @@ def SuffixTrie(text):
   edges = ConsolidateEdges(edges)  
   return edges
 
-def LongestRepeat(patterns):
-  from collections import Counter    
-  cnt = Counter([p for p in patterns if len(p)>1])  
-  return max(cnt).replace("$", "")
+def LongestRepeat(text):
+  from collections import Counter
+  patterns=[]
+  for l in reversed(range(1,len(text))):
+    patterns = [text[i:i+l] for i in range(len(text)-l+1)]    
+    cnt = Counter(patterns) # in descending order
+    longest = max([cnt[c] for c in cnt])
+    if longest > 1 :
+      repeats = [c for c in cnt if cnt[c]==longest]
+      return repeats
+    
+  return ['']
   
 def PrintEdges(edges):
   txt=[]
@@ -128,12 +136,12 @@ def main_LongestRepeatProblem(myfile):
   
   with open(inputFile) as inFile:    
     text = inFile.readline().strip()  
-  print text
-  edges = SuffixTrie(text)  
-  long = LongestRepeat([x[1] for x in edges])
+  
+  long = LongestRepeat(text)
+  
   with open(outputFile, 'w') as outFile:
-    outFile.write(long)
-    print long
+    outFile.write(long[0])
+    print 'Text {} has solution(s): {}'.format(text,long)
     
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
