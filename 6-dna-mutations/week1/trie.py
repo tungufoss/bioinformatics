@@ -70,17 +70,32 @@ def SuffixTrie(text):
   edges = ConsolidateEdges(edges)  
   return edges
 
-def LongestRepeat(text):
-  from collections import Counter
-  patterns=[]
+def LongestRepeat(text):  
   for l in reversed(range(1,len(text))):
-    patterns = [text[i:i+l] for i in range(len(text)-l+1)]    
-    cnt = Counter(patterns) # in descending order
+    cnt = AuxLongestRepeat(text,l)
     longest = max([cnt[c] for c in cnt])
+    repeats = [c for c in cnt if cnt[c]==longest]    
     if longest > 1 :
+      return repeats    
+  return ['']
+
+def AuxLongestRepeat(text,length):
+  from collections import Counter  
+  patterns = [text[i:i+length] for i in range(len(text)-length+1)]    
+  cnt = Counter(patterns) # in descending order
+  return cnt
+  
+def LongestSharedRepeat(text1,text2):  
+  for l in reversed(range(1,len(text1))):
+    cnt1=AuxLongestRepeat(text1,l)
+    cnt2=AuxLongestRepeat(text2,l)
+    cnt = {}
+    for c in [r for r in cnt1 if r in cnt2] :
+      cnt[c] = cnt1[c]+cnt2[c]    
+    if cnt != {} :      
+      longest = max([cnt[c] for c in cnt])
       repeats = [c for c in cnt if cnt[c]==longest]
-      return repeats
-    
+      return sorted(repeats)
   return ['']
   
 def PrintEdges(edges):
@@ -142,6 +157,23 @@ def main_LongestRepeatProblem(myfile):
   with open(outputFile, 'w') as outFile:
     outFile.write(long[0])
     print 'Text {} has solution(s): {}'.format(text,long)
+
+def main_LongestSharedSubstringProblem(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:    
+    text1 = inFile.readline().strip()
+    text2 = inFile.readline().strip()
+  
+  long = LongestSharedRepeat(text1,text2)
+  if myfile == 'LongestSharedSubstring':
+    if 'AACAGAAG' in long :
+      print 'Correct solution found; AACAGAAG'
+  
+  with open(outputFile, 'w') as outFile:
+    outFile.write(long[0])
+    print 'Texts ({},{}) has shared solution(s): {}'.format(text1,text2,long)
     
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
@@ -152,7 +184,9 @@ main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem')
 main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem2')
 main_SuffixTreeConstructionProblem('SuffixTreeConstruction')
 main_SuffixTreeConstructionProblem('dataset_296_4')
-'''
 main_LongestRepeatProblem('sample_LongestRepeatProblem')
 main_LongestRepeatProblem('dataset_296_5')
-
+'''
+main_LongestSharedSubstringProblem('sample_LongestSharedSubstringProblem')
+main_LongestSharedSubstringProblem('LongestSharedSubstring')
+main_LongestSharedSubstringProblem('dataset_296_6')
