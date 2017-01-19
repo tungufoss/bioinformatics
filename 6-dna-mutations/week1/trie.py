@@ -40,17 +40,17 @@ def ConsolidateEdges(edges):
     else :
       connected[from_edge].append(y)
       
-  InOrder(0, edges, cedges, connected)
+  InOrderTrie(0, edges, cedges, connected)
   return cedges
 
-def InOrder(from_node, edges, cedges, connected):   
+def InOrderTrie(from_node, edges, cedges, connected):   
   if from_node not in connected :
     return 0, ''  
     
   children = connected[from_node]  
   for child in children :     
     to_node, symbol = child
-    nSubtrees, symbols = InOrder(to_node, edges, cedges, connected)
+    nSubtrees, symbols = InOrderTrie(to_node, edges, cedges, connected)
     
     if nSubtrees <= 1:      
       symbols = symbol+symbols
@@ -113,7 +113,40 @@ def PrintEdges(edges):
   for node in sorted(edges):
     txt.append('{}->{}:{}'.format(node[0],edges[node],node[1]))
   return '\n'.join(txt)
- 
+
+def AdjencyStr2List(adjacency_str):
+  adjacency_list={}
+  for txt in adjacency_str :
+    from_node, to_nodes = txt.split(' -> ')
+    adjacency_list[int(from_node)] = [int(x) for x in to_nodes.split(',')]
+  return adjacency_list
+
+def InOrderMaximal(from_node, start_node, connected, path_list):  
+  if from_node not in connected:
+    return [from_node] 
+    
+  children = connected[from_node]
+  del connected[from_node]   
+  for to_node in children:   
+    paths = InOrderMaximal(to_node, start_node, connected, path_list)    
+    paths.append(from_node)      
+    
+    # commit currently found non branching paths 
+    if len(children)>1 or from_node == start_node:      
+      path_list.append(reversed(paths))
+      # restart fresh 
+      paths=[from_node]
+  return paths
+  
+def MaximalNonBranchingPaths(adjacency_list):
+  connected=adjacency_list.copy()  
+  path_list=[]
+  print connected  
+  while len(connected)>0:    
+    root = min(connected)
+    InOrderMaximal(root, root, connected, path_list)  
+  return path_list
+  
 def main_TrieConstructionProblem(myfile):  
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -195,7 +228,23 @@ def main_ShortestNonSharedSubstringProblem(myfile):
   with open(outputFile, 'w') as outFile:
     outFile.write(short[0])
     print 'Texts ({},{}) has shared solution(s): {}'.format(text1,text2,short)
+
+def main_MaximalNonBranchingPaths(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
   
+  with open(inputFile) as inFile:        
+    adjacency_str = [line.strip() for line in inFile]
+
+  adjacency_list = AdjencyStr2List(adjacency_str)
+  paths = MaximalNonBranchingPaths(adjacency_list)
+  
+  with open(outputFile, 'w') as outFile:
+    for path in paths:
+      txt = ' -> '.join([str(x) for x in path])
+      outFile.write(txt+'\n')
+      print txt
+    
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
 main_TrieConstructionProblem('dataset_294_4')
@@ -210,8 +259,9 @@ main_LongestRepeatProblem('dataset_296_5')
 main_LongestSharedSubstringProblem('sample_LongestSharedSubstringProblem')
 main_LongestSharedSubstringProblem('LongestSharedSubstring')
 main_LongestSharedSubstringProblem('dataset_296_6')
-'''
 main_ShortestNonSharedSubstringProblem('sample_ShortestNonSharedSubstring')
 main_ShortestNonSharedSubstringProblem('ShortestNonSharedSubstring')
 main_ShortestNonSharedSubstringProblem('dataset_296_7')
-
+'''
+main_MaximalNonBranchingPaths('sample_MaximalNonBranchingPaths')
+main_MaximalNonBranchingPaths('dataset_6207_2')
