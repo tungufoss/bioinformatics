@@ -129,11 +129,12 @@ def InOrderMaximal(from_node, start_node, connected, path_list):
   del connected[from_node]   
   for to_node in children:   
     paths = InOrderMaximal(to_node, start_node, connected, path_list)    
-    paths.append(from_node)      
+    cyclic = from_node in paths    
+    paths.append(from_node)
     
     # commit currently found non branching paths 
     if len(children)>1 or from_node == start_node:      
-      path_list.append(reversed(paths))
+      path_list.append((reversed(paths),cyclic))
       # restart fresh 
       paths=[from_node]
   return paths
@@ -238,12 +239,13 @@ def main_MaximalNonBranchingPaths(myfile):
 
   adjacency_list = AdjencyStr2List(adjacency_str)
   paths = MaximalNonBranchingPaths(adjacency_list)
-  
+  print paths 
   with open(outputFile, 'w') as outFile:
-    for path in paths:
-      txt = ' -> '.join([str(x) for x in path])
-      outFile.write(txt+'\n')
-      print txt
+    for cyclic in [False, True]: 
+      for path in sorted([p[0] for p in paths if p[1]==cyclic]):
+        txt = ' -> '.join([str(x) for x in path])
+        outFile.write(txt+'\n')
+        print txt
     
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
