@@ -72,14 +72,14 @@ def SuffixTrie(text):
 
 def LongestRepeat(text):  
   for l in reversed(range(1,len(text))):
-    cnt = AuxLongestRepeat(text,l)
+    cnt = AuxRepeats(text,l)
     longest = max([cnt[c] for c in cnt])
     repeats = [c for c in cnt if cnt[c]==longest]    
     if longest > 1 :
       return repeats    
   return ['']
 
-def AuxLongestRepeat(text,length):
+def AuxRepeats(text,length):
   from collections import Counter  
   patterns = [text[i:i+length] for i in range(len(text)-length+1)]    
   cnt = Counter(patterns) # in descending order
@@ -87,8 +87,8 @@ def AuxLongestRepeat(text,length):
   
 def LongestSharedRepeat(text1,text2):  
   for l in reversed(range(1,len(text1))):
-    cnt1=AuxLongestRepeat(text1,l)
-    cnt2=AuxLongestRepeat(text2,l)
+    cnt1=AuxRepeats(text1,l)
+    cnt2=AuxRepeats(text2,l)
     cnt = {}
     for c in [r for r in cnt1 if r in cnt2] :
       cnt[c] = cnt1[c]+cnt2[c]    
@@ -96,6 +96,16 @@ def LongestSharedRepeat(text1,text2):
       longest = max([cnt[c] for c in cnt])
       repeats = [c for c in cnt if cnt[c]==longest]
       return sorted(repeats)
+  return ['']
+
+def ShortestNonSharedSubstringProblem(text1,text2):
+  print text1, text2
+  for l in range(1,len(text1)):
+    cnt1=AuxRepeats(text1,l)
+    cnt2=AuxRepeats(text2,l)
+    non_shared = [r for r in cnt1 if r not in cnt2] 
+    if len(non_shared)>0 :      
+      return non_shared
   return ['']
   
 def PrintEdges(edges):
@@ -167,14 +177,25 @@ def main_LongestSharedSubstringProblem(myfile):
     text2 = inFile.readline().strip()
   
   long = LongestSharedRepeat(text1,text2)
-  if myfile == 'LongestSharedSubstring':
-    if 'AACAGAAG' in long :
-      print 'Correct solution found; AACAGAAG'
   
   with open(outputFile, 'w') as outFile:
     outFile.write(long[0])
     print 'Texts ({},{}) has shared solution(s): {}'.format(text1,text2,long)
-    
+
+def main_ShortestNonSharedSubstringProblem(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:    
+    text1 = inFile.readline().strip()
+    text2 = inFile.readline().strip()
+  
+  short = ShortestNonSharedSubstringProblem(text1,text2)  
+  
+  with open(outputFile, 'w') as outFile:
+    outFile.write(short[0])
+    print 'Texts ({},{}) has shared solution(s): {}'.format(text1,text2,short)
+  
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
 main_TrieConstructionProblem('dataset_294_4')
@@ -186,7 +207,11 @@ main_SuffixTreeConstructionProblem('SuffixTreeConstruction')
 main_SuffixTreeConstructionProblem('dataset_296_4')
 main_LongestRepeatProblem('sample_LongestRepeatProblem')
 main_LongestRepeatProblem('dataset_296_5')
-'''
 main_LongestSharedSubstringProblem('sample_LongestSharedSubstringProblem')
 main_LongestSharedSubstringProblem('LongestSharedSubstring')
 main_LongestSharedSubstringProblem('dataset_296_6')
+'''
+main_ShortestNonSharedSubstringProblem('sample_ShortestNonSharedSubstring')
+main_ShortestNonSharedSubstringProblem('ShortestNonSharedSubstring')
+main_ShortestNonSharedSubstringProblem('dataset_296_7')
+
