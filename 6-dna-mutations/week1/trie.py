@@ -324,6 +324,33 @@ def main_TreeColoring(myfile):
     for node in sorted(color_lbl):
       txt = '{}: {}'.format(node, color_lbl[node])
       outFile.write(txt+'\n')  
+
+def main_test():
+
+  print '#1\tThe most efficient way to map reads to a reference genome is by using global alignment to align each read to the reference genome.'
+  print '\tTrue'
+  
+  print '#2\tWhat is the runtime of BruteForcePatternMatching?','n = |text| and m = |pattern|'
+  print '\tWorst case is when you have m=1, O(nm)'
+  print '\tNote: Best case is when you have m=n, O(m)'
+  
+  print '#3\tWhich patterns could have been used to construct the following trie? (Select all that apply.)'
+  print '\t[{}]\tcandy'.format(True)
+  print '\t[{}]\tcad'.format(True)
+  print '\t[{}]\tbanner'.format(False)
+  print '\t[{}]\tbanana'.format(False)
+  
+  pattern = 'na'
+  print '#4\tGiven the following suffix trie/suffix tree of an unknown text, identify all starting positions in the underlying text of\n\tPattern = "{}". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.'.format(pattern)
+  text = 'adnaadnanadadnan$'
+  indices = TrieMatching(text,[pattern])
+  print '\tText: "{}" has starting positions {} for "{}"'.format(text, indices, pattern)
+  
+  text='TTGAATGACTCCTATAACGAACTTCGACATGGCA$'
+  print '#5\tHow many leaves will SuffixTree("{}") have?'.format(text)
+  edges = SuffixTrie(text)
+  leafs = [x for x in edges if x[1][-1]=='$']
+  print '\t#{} leafs'.format(len(leafs))
       
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
@@ -344,6 +371,7 @@ main_ShortestNonSharedSubstringProblem('ShortestNonSharedSubstring')
 main_ShortestNonSharedSubstringProblem('dataset_296_7')
 main_MaximalNonBranchingPaths('sample_MaximalNonBranchingPaths')
 main_MaximalNonBranchingPaths('dataset_6207_2')
-'''
 main_TreeColoring('sample_TreeColoring')
 main_TreeColoring('dataset_9665_6')
+'''
+main_test()

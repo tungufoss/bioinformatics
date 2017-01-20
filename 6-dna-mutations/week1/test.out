@@ -1,0 +1,15 @@
+#1	The most efficient way to map reads to a reference genome is by using global alignment to align each read to the reference genome.
+	True
+#2	What is the runtime of BruteForcePatternMatching? n = |text| and m = |pattern|
+	Worst case is when you have m=1, O(nm)
+	Note: Best case is when you have m=n, O(m)
+#3	Which patterns could have been used to construct the following trie? (Select all that apply.)
+	[True]	candy
+	[True]	cad
+	[False]	banner
+	[False]	banana
+#4	Given the following suffix trie/suffix tree of an unknown text, identify all starting positions in the underlying text of
+	Pattern = "na". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.
+	Text: "adnaadnanadadnan$" has starting positions [2, 6, 8, 13] for "na"
+#5	How many leaves will SuffixTree("TTGAATGACTCCTATAACGAACTTCGACATGGCA$") have?
+	#35 leafs
