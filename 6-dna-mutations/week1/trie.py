@@ -335,18 +335,18 @@ def main_test():
   print '\tNote: Best case is when you have m=n, O(m)'
   
   print '#3\tWhich patterns could have been used to construct the following trie? (Select all that apply.)'
-  print '\t[{}]\tcan'.format(True)
-  print '\t[{}]\tbanal'.format(True)
-  print '\t[{}]\tananas'.format(False)
+  print '\t[{}]\tdale'.format(True)
+  print '\t[{}]\tbandana'.format(True)
+  print '\t[{}]\tbanana'.format(False)
   print '\t[{}]\tdanny'.format(False)
   
-  pattern = 'dna'
+  pattern = 'na'
   print '#4\tGiven the following suffix trie/suffix tree of an unknown text, identify all starting positions in the underlying text of\n\tPattern = "{}". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.'.format(pattern)
-  text = 'danaadnanadadnan$'
+  text = 'adnaadnanadadnan$'
   indices = TrieMatching(text,[pattern])
-  print '\tText: "{}" has starting positions {} for "{}"'.format(text, indices, pattern)
+  print '\tText: "{}" (|Text|={}) has starting positions {} for "{}"'.format(text, len(text[:-1]), indices, pattern)
   
-  text='TCTGAGCCCTACTGTCGAGAAATATGTATCTCGCCCCCGCAGCTT$'
+  text='AAATCCCCCCCTCGCGACTTCTAGAGAAGAAGAGTACT$'
   print '#5\tHow many leaves will SuffixTree("{}") have?'.format(text)
   edges = SuffixTrie(text)
   leafs = [x for x in edges if x[1][-1]=='$']

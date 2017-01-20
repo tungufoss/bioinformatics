@@ -4,12 +4,12 @@
 	Worst case is when you have m=1, O(nm)
 	Note: Best case is when you have m=n, O(m)
 #3	Which patterns could have been used to construct the following trie? (Select all that apply.)
-	[True]	can
-	[True]	banal
-	[False]	ananas
+	[True]	dale
+	[True]	bandana
+	[False]	banana
 	[False]	danny
 #4	Given the following suffix trie/suffix tree of an unknown text, identify all starting positions in the underlying text of
-	Pattern = "dna". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.
-	Text: "danaadnanadadnan$" has starting positions [5, 12] for "dna"
-#5	How many leaves will SuffixTree("TCTGAGCCCTACTGTCGAGAAATATGTATCTCGCCCCCGCAGCTT$") have?
-	#46 leafs
+	Pattern = "na". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.
+	Text: "adnaadnanadadnan$" (|Text|=16) has starting positions [2, 6, 8, 13] for "na"
+#5	How many leaves will SuffixTree("AAATCCCCCCCTCGCGACTTCTAGAGAAGAAGAGTACT$") have?
+	#39 leafs
