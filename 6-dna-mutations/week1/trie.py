@@ -328,25 +328,25 @@ def main_TreeColoring(myfile):
 def main_test():
 
   print '#1\tThe most efficient way to map reads to a reference genome is by using global alignment to align each read to the reference genome.'
-  print '\tTrue'
+  print '\tFalse'
   
   print '#2\tWhat is the runtime of BruteForcePatternMatching?','n = |text| and m = |pattern|'
   print '\tWorst case is when you have m=1, O(nm)'
   print '\tNote: Best case is when you have m=n, O(m)'
   
   print '#3\tWhich patterns could have been used to construct the following trie? (Select all that apply.)'
-  print '\t[{}]\tcandy'.format(True)
-  print '\t[{}]\tcad'.format(True)
-  print '\t[{}]\tbanner'.format(False)
-  print '\t[{}]\tbanana'.format(False)
+  print '\t[{}]\tcan'.format(True)
+  print '\t[{}]\tbanal'.format(True)
+  print '\t[{}]\tananas'.format(False)
+  print '\t[{}]\tdanny'.format(False)
   
-  pattern = 'na'
+  pattern = 'dna'
   print '#4\tGiven the following suffix trie/suffix tree of an unknown text, identify all starting positions in the underlying text of\n\tPattern = "{}". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.'.format(pattern)
-  text = 'adnaadnanadadnan$'
+  text = 'danaadnanadadnan$'
   indices = TrieMatching(text,[pattern])
   print '\tText: "{}" has starting positions {} for "{}"'.format(text, indices, pattern)
   
-  text='TTGAATGACTCCTATAACGAACTTCGACATGGCA$'
+  text='TCTGAGCCCTACTGTCGAGAAATATGTATCTCGCCCCCGCAGCTT$'
   print '#5\tHow many leaves will SuffixTree("{}") have?'.format(text)
   edges = SuffixTrie(text)
   leafs = [x for x in edges if x[1][-1]=='$']
