@@ -116,9 +116,12 @@ def PrintEdges(edges):
 
 def AdjencyStr2List(adjacency_str):
   adjacency_list={}
-  for txt in adjacency_str :
+  for txt in adjacency_str :    
     from_node, to_nodes = txt.split(' -> ')
-    adjacency_list[int(from_node)] = [int(x) for x in to_nodes.split(',')]
+    if to_nodes == '{}' :
+      adjacency_list[int(from_node)] = []
+    else :
+      adjacency_list[int(from_node)] = [int(x) for x in to_nodes.split(',')]
   return adjacency_list
 
 def Degree(adjacency_list):
@@ -181,6 +184,29 @@ def MaximalNonBranchingPaths(adjacency_list):
     paths.append(cycle)
   
   return paths
+
+# TreeColoring: colors the nodes of a suffix tree from the leaves upward. 
+def TreeColoring(adjacency_list, color_lbl):
+  # This algorithm assumes that the leaves of the suffix tree have been labeled "blue" or "red" 
+  # and all other nodes have been labeled "gray". 
+  for node in adjacency_list:
+    if node not in color_lbl:
+      color_lbl[node] = 'gray'
+
+  # A node in a tree is called ripe if it is gray but has no gray children.
+  ripe_nodes = [v for v in color_lbl if color_lbl[v] == 'gray' and 'gray' not in [color_lbl[w] for w in adjacency_list[v]]]  
+  # while ColoredTree has ripe nodes
+  while len(ripe_nodes)>0:
+    # for each ripe node v in ColoredTree
+    for v in ripe_nodes :
+      children = adjacency_list[v]
+      children_color = list(set([color_lbl[u] for u in children]))      
+      #if there exist differently colored children of v
+      if len(children_color) > 1 : 
+        color_lbl[v] = 'purple'
+      else : 
+        color_lbl[v] = children_color[0] # color of all children of v        
+    ripe_nodes = [v for v in color_lbl if color_lbl[v] == 'gray']
   
 def main_TrieConstructionProblem(myfile):  
   inputFile = myfile + '.txt'
@@ -278,7 +304,27 @@ def main_MaximalNonBranchingPaths(myfile):
     for path in paths :
       txt = ' -> '.join([str(x) for x in path])
       outFile.write(txt+'\n')        
-    
+
+def main_TreeColoring(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:
+    input = [line.strip() for line in inFile]
+    ix = input.index('-')    
+    adjacency_list = AdjencyStr2List(input[:ix])
+    color_lbl={}
+    for x in input[ix+1:]:
+      node,color = x.split(': ')
+      color_lbl[int(node)]=color
+  
+  TreeColoring(adjacency_list, color_lbl)
+  
+  with open(outputFile, 'w') as outFile:
+    for node in sorted(color_lbl):
+      txt = '{}: {}'.format(node, color_lbl[node])
+      outFile.write(txt+'\n')  
+      
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
 main_TrieConstructionProblem('dataset_294_4')
@@ -296,7 +342,8 @@ main_LongestSharedSubstringProblem('dataset_296_6')
 main_ShortestNonSharedSubstringProblem('sample_ShortestNonSharedSubstring')
 main_ShortestNonSharedSubstringProblem('ShortestNonSharedSubstring')
 main_ShortestNonSharedSubstringProblem('dataset_296_7')
-'''
 main_MaximalNonBranchingPaths('sample_MaximalNonBranchingPaths')
-main_MaximalNonBranchingPaths('MaximalNonBranchingPaths')
 main_MaximalNonBranchingPaths('dataset_6207_2')
+'''
+main_TreeColoring('sample_TreeColoring')
+main_TreeColoring('dataset_9665_6')
