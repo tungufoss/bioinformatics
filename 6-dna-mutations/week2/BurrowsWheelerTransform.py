@@ -1,3 +1,7 @@
+import sys
+sys.path.insert(0,'../')
+from common import TextMatching
+
 def SuffixArrayConstruction(text):
   if text[-1] != '$':
     text+='$'
@@ -63,6 +67,13 @@ def FirstLastProperty(Mrow,FirstColumn,LastColumn,N):
     nrow = LastColumn.index(char) 
     Mrow[col] = FirstColumn[nrow]
   return Mrow
+
+def BWMatching(text, patterns):
+  matches = {}
+  for pattern in patterns:
+    matches[pattern] = len(TextMatching(text, [pattern]))
+
+  return matches 
   
 def main_SuffixArrayConstruction(myfile):
   inputFile = myfile + '.txt'
@@ -105,13 +116,30 @@ def main_InverseBurrowsWheelerTransform(myfile):
     outFile.write(text)  
     print text
 
+def main_BWMatching(myfile):    
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:        
+    transform = inFile.readline().strip()
+    patterns = [x for x in inFile.readline().strip().split(' ')]
+  
+  text = InvBurrowsWheelerTransformConstruction(transform)
+  matches = BWMatching(text, patterns)
+  
+  with open(outputFile, 'w') as outFile:        
+    txt = ' '.join([str(matches[pattern]) for pattern in patterns])
+    outFile.write(txt)  
+    print txt    
+    
 '''  
 main_SuffixArrayConstruction('sample_SuffixArrayConstruction')
 main_SuffixArrayConstruction('dataset_310_2')
 main_BurrowsWheelerTransformConstruction('sample_BurrowsWheelerTransformConstruction')
 main_BurrowsWheelerTransformConstruction('dataset_297_5')
-'''
 main_InverseBurrowsWheelerTransform('sample_InverseBurrowsWheelerTransformConstruction')
 main_InverseBurrowsWheelerTransform('exbreak_InverseBurrowsWheelerTransformConstruction')
 main_InverseBurrowsWheelerTransform('dataset_299_10')
-
+'''
+main_BWMatching('sample_BWMatching')
+main_BWMatching('dataset_300_8')

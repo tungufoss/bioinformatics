@@ -1,3 +1,7 @@
+import sys
+sys.path.insert(0,'../')
+from common import TextMatching
+
 Inf = -1
 
 def TrieConstructionProblem(patterns):
@@ -15,18 +19,6 @@ def TrieConstructionProblem(patterns):
         currentNode = nNodes
 
   return edges
-
-def TrieMatching(text,patterns):
-  N = len(text)
-  indices = []
-  for pattern in patterns:
-    K = len(pattern)    
-    for i in range(0,N-K+1):
-      #print ' '*i+text[i:(i+K)]
-      if text[i:(i+K)] == pattern:
-        indices.append(i)
-  
-  return indices
 
 def ConsolidateEdges(edges):
   cedges = {}
@@ -229,7 +221,7 @@ def main_TrieMatchingProblem(myfile):
     text = inFile.readline().strip()
     patterns = [line.strip() for line in inFile]
 
-  indices = TrieMatching(text,patterns)
+  indices = TextMatching(text,patterns)
     
   with open(outputFile, 'w') as outFile:
     txt = ' '.join([str(x) for x in sorted(indices)])    
@@ -343,7 +335,7 @@ def main_test():
   pattern = 'na'
   print '#4\tGiven the following suffix trie/suffix tree of an unknown text, identify all starting positions in the underlying text of\n\tPattern = "{}". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.'.format(pattern)
   text = 'adnaadnanadadnan$'
-  indices = TrieMatching(text,[pattern])
+  indices = TextMatching(text,[pattern])
   print '\tText: "{}" (|Text|={}) has starting positions {} for "{}"'.format(text, len(text[:-1]), indices, pattern)
   
   text='AAATCCCCCCCTCGCGACTTCTAGAGAAGAAGAGTACT$'
@@ -351,7 +343,11 @@ def main_test():
   edges = SuffixTrie(text)
   leafs = [x for x in edges if x[1][-1]=='$']
   print '\t#{} leafs'.format(len(leafs))
-      
+
+
+main_TrieMatchingProblem('sample_TrieMatchingProblem')
+main_TrieMatchingProblem('dataset_294_8')
+  
 '''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
 main_TrieConstructionProblem('dataset_294_4')
