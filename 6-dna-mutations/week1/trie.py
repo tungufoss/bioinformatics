@@ -20,6 +20,14 @@ def TrieConstructionProblem(patterns):
 
   return edges
 
+def TrieMatching(text,patterns):
+  N = len(text)
+  indices = []
+  for pattern in patterns:
+    indices += TextMatching(text, pattern)
+    
+  return indices
+
 def ConsolidateEdges(edges):
   cedges = {}
   connected = {}
@@ -221,7 +229,7 @@ def main_TrieMatchingProblem(myfile):
     text = inFile.readline().strip()
     patterns = [line.strip() for line in inFile]
 
-  indices = TextMatching(text,patterns)
+  indices = TrieMatching(text,patterns)
     
   with open(outputFile, 'w') as outFile:
     txt = ' '.join([str(x) for x in sorted(indices)])    
@@ -335,7 +343,7 @@ def main_test():
   pattern = 'na'
   print '#4\tGiven the following suffix trie/suffix tree of an unknown text, identify all starting positions in the underlying text of\n\tPattern = "{}". Use 0-based indexing and enter the starting positions as space-separated integers in increasing order.'.format(pattern)
   text = 'adnaadnanadadnan$'
-  indices = TextMatching(text,[pattern])
+  indices = TextMatching(text,pattern)
   print '\tText: "{}" (|Text|={}) has starting positions {} for "{}"'.format(text, len(text[:-1]), indices, pattern)
   
   text='AAATCCCCCCCTCGCGACTTCTAGAGAAGAAGAGTACT$'
@@ -344,18 +352,12 @@ def main_test():
   leafs = [x for x in edges if x[1][-1]=='$']
   print '\t#{} leafs'.format(len(leafs))
 
-
-main_TrieMatchingProblem('sample_TrieMatchingProblem')
-main_TrieMatchingProblem('dataset_294_8')
-  
-'''
 main_TrieConstructionProblem('sample_TrieConstructionProblem')
 main_TrieConstructionProblem('dataset_294_4')
 main_TrieMatchingProblem('sample_TrieMatchingProblem')
 main_TrieMatchingProblem('dataset_294_8')
 main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem')
 main_SuffixTreeConstructionProblem('sample_SuffixTreeConstructionProblem2')
-main_SuffixTreeConstructionProblem('SuffixTreeConstruction')
 main_SuffixTreeConstructionProblem('dataset_296_4')
 main_LongestRepeatProblem('sample_LongestRepeatProblem')
 main_LongestRepeatProblem('dataset_296_5')
@@ -369,5 +371,4 @@ main_MaximalNonBranchingPaths('sample_MaximalNonBranchingPaths')
 main_MaximalNonBranchingPaths('dataset_6207_2')
 main_TreeColoring('sample_TreeColoring')
 main_TreeColoring('dataset_9665_6')
-'''
 main_test()

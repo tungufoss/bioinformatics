@@ -71,7 +71,7 @@ def FirstLastProperty(Mrow,FirstColumn,LastColumn,N):
 def BWMatching(text, patterns):
   matches = {}
   for pattern in patterns:
-    matches[pattern] = len(TextMatching(text, [pattern]))
+    matches[pattern] = len(TextMatching(text, pattern))
 
   return matches 
   
