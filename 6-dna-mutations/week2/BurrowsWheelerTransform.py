@@ -34,22 +34,35 @@ def InvBurrowsWheelerTransformConstruction(transform):
         
   FirstColumn = sorted(LastColumn)  
     
+  row = LastColumn.index(('$',1))    
+  if False : # full M matrix
+    M = InvBurrowsWheelerMatrix(FirstColumn,LastColumn,N)    
+    text= ''.join([ M[row][i][0] for i in range(N) ])    
+  else : # only the row that is needed is computed 
+    M = [FirstColumn[row]]+[('?',-1)]*(N-2)+[LastColumn[row]]
+    M = FirstLastProperty(M, FirstColumn, LastColumn, N)
+    text= ''.join([ m[0] for m in M ])    
+    
+  return text
+
+def InvBurrowsWheelerMatrix(FirstColumn,LastColumn,N):
   M = {}
   for i in range(N):
     M[i] = [FirstColumn[i]]+[('?',-1)]*(N-2)+[LastColumn[i]]
   
   # Using the First-Last Property for inverting the Burrows-Wheeler transform    
   for row in range(N):    
-    for col in range(1,N-1):    
-      char = M[row][col-1]     
-      nrow = LastColumn.index(char) 
-      M[row][col] = M[nrow][0] # First column
-    
+    M[row]=FirstLastProperty(M[row],FirstColumn,LastColumn,N)
+
   #for m in sorted(M): print m, [x[0] for x in M[m] ] # remove subscripts
+  return M
   
-  row = LastColumn.index(('$',1))    
-  text= ''.join([ M[row][i][0] for i in range(N) ])    
-  return text
+def FirstLastProperty(Mrow,FirstColumn,LastColumn,N):
+  for col in range(1,N-1):    
+    char = Mrow[col-1]     
+    nrow = LastColumn.index(char) 
+    Mrow[col] = FirstColumn[nrow]
+  return Mrow
   
 def main_SuffixArrayConstruction(myfile):
   inputFile = myfile + '.txt'
