@@ -17,7 +17,7 @@ def BurrowsWheelerTransformConstruction(text):
     cyclic_rotations.append(text)
     # a cyclic rotation is defined by chopping off a suffix from the end of Text and appending this suffix to the beginning of Text. 
     text = text[-1]+text[:-1]
-  print text
+  
   # Next - similarly to suffix arrays - order all the cyclic rotations of Text lexicographically to form a |Text| x |Text| matrix of symbols that we call the Burrows-Wheeler matrix and denote by M(Text). 
   M = sorted(cyclic_rotations)  
   # We are interested in the last column of M(Text), called the Burrows-Wheeler transform of Text, or BWT(Text)
@@ -25,19 +25,18 @@ def BurrowsWheelerTransformConstruction(text):
   return BWT
 
 def InvBurrowsWheelerTransformConstruction(transform):
-  transform = list(transform)
-  N = len(transform)
-  
-  # add subscripts
-  for i in reversed(range(N)):    
-    transform[i] += str(transform[:i+1].count(transform[i]))
-  
-  FirstColumn = sorted(transform)
-  LastColumn = transform    
-  
+  N = len(transform)  
+  # add subscripts  
+  LastColumn = []
+  for i in range(N):    
+    subscript = transform[:i+1].count(transform[i])
+    LastColumn.append((transform[i],subscript))
+        
+  FirstColumn = sorted(LastColumn)  
+    
   M = {}
   for i in range(N):
-    M[i] = [FirstColumn[i]]+['?']*(N-2)+[LastColumn[i]]
+    M[i] = [FirstColumn[i]]+[('?',-1)]*(N-2)+[LastColumn[i]]
   
   # Using the First-Last Property for inverting the Burrows-Wheeler transform    
   for row in range(N):    
@@ -46,10 +45,10 @@ def InvBurrowsWheelerTransformConstruction(transform):
       nrow = LastColumn.index(char) 
       M[row][col] = M[nrow][0] # First column
     
-  # for m in sorted(M): print m, [x[0] for x in M[m] ] # remove subscripts
+  #for m in sorted(M): print m, [x[0] for x in M[m] ] # remove subscripts
   
-  row = LastColumn.index('$1')
-  text= ''.join([ M[row][i][0] for i in range(N) ])  
+  row = LastColumn.index(('$',1))    
+  text= ''.join([ M[row][i][0] for i in range(N) ])    
   return text
   
 def main_SuffixArrayConstruction(myfile):
