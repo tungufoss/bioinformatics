@@ -28,25 +28,26 @@ def BurrowsWheelerTransformConstruction(text):
   BWT = ''.join([m[-1] for m in M])  
   return BWT
 
-def InvBurrowsWheelerTransformConstruction(transform):
-  N = len(transform)  
-  # add subscripts  
+def FirstLastColumns(transform):
   LastColumn = []
-  for i in range(N):    
+  # add subscripts  
+  for i in range(len(transform)):    
     subscript = transform[:i+1].count(transform[i])
-    LastColumn.append((transform[i],subscript))
-        
+    LastColumn.append((transform[i],subscript))        
   FirstColumn = sorted(LastColumn)  
-    
+  return FirstColumn, LastColumn
+  
+def InvBurrowsWheelerTransformConstruction(transform):
+  FirstColumn, LastColumn = FirstLastColumns(transform)  
+  N = len(transform)    
   row = LastColumn.index(('$',1))    
   if False : # full M matrix
     M = InvBurrowsWheelerMatrix(FirstColumn,LastColumn,N)    
     text= ''.join([ M[row][i][0] for i in range(N) ])    
   else : # only the row that is needed is computed 
     M = [FirstColumn[row]]+[('?',-1)]*(N-2)+[LastColumn[row]]
-    M = FirstLastProperty(M, FirstColumn, LastColumn, N)
+    M = FirstLastPropertyFill(M, FirstColumn, LastColumn, N)
     text= ''.join([ m[0] for m in M ])    
-    
   return text
 
 def InvBurrowsWheelerMatrix(FirstColumn,LastColumn,N):
@@ -56,23 +57,49 @@ def InvBurrowsWheelerMatrix(FirstColumn,LastColumn,N):
   
   # Using the First-Last Property for inverting the Burrows-Wheeler transform    
   for row in range(N):    
-    M[row]=FirstLastProperty(M[row],FirstColumn,LastColumn,N)
+    M[row]=FirstLastPropertyFill(M[row],FirstColumn,LastColumn,N)
 
   #for m in sorted(M): print m, [x[0] for x in M[m] ] # remove subscripts
   return M
   
-def FirstLastProperty(Mrow,FirstColumn,LastColumn,N):
+def FirstLastPropertyFill(Mrow,FirstColumn,LastColumn,N):
   for col in range(1,N-1):    
     char = Mrow[col-1]     
     nrow = LastColumn.index(char) 
     Mrow[col] = FirstColumn[nrow]
   return Mrow
 
-def BWMatching(text, patterns):
+def FirstLastPropertyMatch(pattern,FirstColumn,LastColumn,row,N):
+  org = '{}-{}'.format(row, pattern)
+  iter=0
+  while len(pattern)>0:
+    symbol = pattern[0]
+    pattern = pattern[1:]  
+    row = LastColumn.index(FirstColumn[row])
+    #print org,'#{}:\t{}=={} \t({})'.format(iter, symbol, FirstColumn[row], pattern)
+    if symbol != FirstColumn[row][0] : return False    
+    iter+=1
+  return True 
+  
+def TextMatches(text, patterns):  
   matches = {}
   for pattern in patterns:
-    matches[pattern] = len(TextMatching(text, pattern))
+    matches[pattern] = len(TextMatching(text, pattern))  
+  return matches 
 
+def BWMatchingAux(pattern, FirstColumn, LastColumn):
+  N = len(FirstColumn)
+  nMatches = 0
+  for i in range(N):
+    if FirstLastPropertyMatch(pattern,FirstColumn,LastColumn,i,N) : 
+      nMatches+=1
+  return nMatches
+  
+def BWMatching(transform, patterns):
+  FirstColumn, LastColumn = FirstLastColumns(transform)  
+  matches = {}
+  for pattern in patterns:   
+    matches[pattern] = BWMatchingAux(pattern, FirstColumn, LastColumn)    
   return matches 
   
 def main_SuffixArrayConstruction(myfile):
@@ -124,22 +151,25 @@ def main_BWMatching(myfile):
     transform = inFile.readline().strip()
     patterns = [x for x in inFile.readline().strip().split(' ')]
   
-  text = InvBurrowsWheelerTransformConstruction(transform)
-  matches = BWMatching(text, patterns)
+  # text = InvBurrowsWheelerTransformConstruction(transform)
+  # matches = TextMatches(text, patterns)
+  
+  matches = BWMatching(transform, patterns)
   
   with open(outputFile, 'w') as outFile:        
     txt = ' '.join([str(matches[pattern]) for pattern in patterns])
     outFile.write(txt)  
     print txt    
-    
-'''  
-main_SuffixArrayConstruction('sample_SuffixArrayConstruction')
-main_SuffixArrayConstruction('dataset_310_2')
-main_BurrowsWheelerTransformConstruction('sample_BurrowsWheelerTransformConstruction')
-main_BurrowsWheelerTransformConstruction('dataset_297_5')
-main_InverseBurrowsWheelerTransform('sample_InverseBurrowsWheelerTransformConstruction')
-main_InverseBurrowsWheelerTransform('exbreak_InverseBurrowsWheelerTransformConstruction')
-main_InverseBurrowsWheelerTransform('dataset_299_10')
-'''
-main_BWMatching('sample_BWMatching')
-main_BWMatching('dataset_300_8')
+
+if __name__ == '__main__':    
+  '''
+  main_SuffixArrayConstruction('sample_SuffixArrayConstruction')
+  main_SuffixArrayConstruction('dataset_310_2')
+  main_BurrowsWheelerTransformConstruction('sample_BurrowsWheelerTransformConstruction')
+  main_BurrowsWheelerTransformConstruction('dataset_297_5')
+  main_InverseBurrowsWheelerTransform('sample_InverseBurrowsWheelerTransformConstruction')
+  main_InverseBurrowsWheelerTransform('exbreak_InverseBurrowsWheelerTransformConstruction')
+  main_InverseBurrowsWheelerTransform('dataset_299_10')
+  '''
+  main_BWMatching('sample_BWMatching')
+  main_BWMatching('dataset_300_8')
