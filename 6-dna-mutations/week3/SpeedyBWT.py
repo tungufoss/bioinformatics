@@ -21,8 +21,27 @@ def Last2FirstColumn(LastColumn):
 def Countsymbol(symbol, i, LastColumn):
   # Countsymbol(i, LastColumn) returns the number of occurrences of symbol in the first i positions of LastColumn
   return LastColumn[:i].count(symbol)
+
+C = 100 # only store the Count arrays when i is divisible by C, where C is a constant; (C is typically equal to 100 in practice) 
+def CountArray(LastColumn):
+  symbols = sorted(list(set(LastColumn)))
+  N = len(LastColumn)  
+  cnts = {}  # these arrays are called checkpoint arrays.   
+  for i in range(0,N,C):
+    cnts[i] = [Countsymbol(symbol, i, LastColumn) for symbol in symbols]
+    #print '{}\t{}\t{}'.format(i,LastColumn[i],cnts[i])
+  return cnts, symbols
   
-def BetterBWMatchingAux(FirstOccurrence, LastColumn, Pattern):  
+def Countsymbol2(symbol, i, LastColumn, CountSymbols, Symbols):  
+  ix = Symbols.index(symbol)  
+  row = (i / C)*C
+  cnt = CountSymbols[row][ix]
+  for j in range(row, row+i%C):
+    if LastColumn[j] == symbol : 
+      cnt+=1  
+  return cnt
+  
+def BetterBWMatchingAux(FirstOccurrence, LastColumn, Pattern, CountSymbols, Symbols): 
   top = 0 # top <- 0
   bottom = len(LastColumn)-1 # bottom <- |LastColumn| - 1
   while top <= bottom : 
@@ -33,9 +52,9 @@ def BetterBWMatchingAux(FirstOccurrence, LastColumn, Pattern):
       check = LastColumn[top:bottom+1]
       if symbol in check:        
         # top <- FirstOccurrence(symbol) + Countsymbol(top, LastColumn)
-        top = FirstOccurrence[symbol] + Countsymbol(symbol, top, LastColumn) 
+        top = FirstOccurrence[symbol] + Countsymbol2(symbol, top, LastColumn, CountSymbols, Symbols) 
         # bottom <- FirstOccurrence(symbol) + Countsymbol(bottom + 1, LastColumn) - 1
-        bottom = FirstOccurrence[symbol] + Countsymbol(symbol, bottom+1, LastColumn)-1 
+        bottom = FirstOccurrence[symbol] + Countsymbol2(symbol, bottom+1, LastColumn, CountSymbols, Symbols) - 1 
       else :
         return 0
     else :
@@ -47,11 +66,12 @@ def rindex(lst, item):
       
 def BetterBWMatching(LastColumn, patterns):  
   FirstOccurrence = FirstOccurrenceColumn(LastColumn)  
+  CountSymbols, Symbols = CountArray(LastColumn)
   matches={}
   for pattern in patterns:
-    matches[pattern] = BetterBWMatchingAux(FirstOccurrence, LastColumn, pattern)    
+    matches[pattern] = BetterBWMatchingAux(FirstOccurrence, LastColumn, pattern, CountSymbols, Symbols)    
   return matches
-
+    
 def main_BetterBWMatching(myfile):    
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
