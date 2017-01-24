@@ -4,37 +4,25 @@ from common import TextMatching
 sys.path.insert(0,'../week2')
 from BurrowsWheelerTransform import InvBurrowsWheelerTransformConstruction, BurrowsWheelerTransformConstruction
 
-def BWTarrays(LastColumn):  
-  CharSet = sorted(set(LastColumn))
-  CharSet = {}
+def FirstOccurrenceColumn(LastColumn):    
   FirstColumn = sorted(LastColumn)  
+  FirstOccurrence = {}
   for symbol in set(LastColumn):
-    FO = FirstColumn.index(symbol)
-    CO = FirstColumn.count(symbol)    
-    CharSet[symbol] = (FO, CO)
-      
-  CntCharSet = []    
-  for i in range(len(LastColumn)):
-    CntCharSet.append([LastColumn[:i].count(symbol) for symbol in sorted(CharSet)])    
-  CntCharSet.append([LastColumn.count(symbol) for symbol in sorted(CharSet)])
-  
-  if False: 
-    N=len(LastColumn)
-    print 'i\tFC\tLC\t(FO,CO)\t{}\n'.format(sorted(CharSet)),'-'*100
-    for i in range(N):
-      print '{}\t{}\t{}\t{}\t{}'.format(i, FirstColumn[i], LastColumn[i], CharSet[FirstColumn[i]], CntCharSet[i]) 
-    print '{}\t\t\t\t{}'.format(N, CntCharSet[i]) 
-    
-  return FirstColumn, CharSet, CntCharSet
+    FirstOccurrence[symbol] = FirstColumn.index(symbol)    
+  return FirstOccurrence
 
 def Last2FirstColumn(LastColumn):
   N = len(LastColumn)    
-  SL = [(LastColumn[i], LastColumn[:i+1].count(LastColumn[i])) for i in range(N) ]
+  SL = [(LastColumn[i], Countsymbol(LastColumn[i], i+1, LastColumn)) for i in range(N) ]
   SF = sorted(SL)  
   LastToFirst = [SF.index(SL[i]) for i in range(N)]  
   return LastToFirst
+
+def Countsymbol(symbol, i, LastColumn):
+  # Countsymbol(i, LastColumn) returns the number of occurrences of symbol in the first i positions of LastColumn
+  return LastColumn[:i].count(symbol)
   
-def BetterBWMatchingAux(FirstColumn, LastColumn, Pattern, LastToFirst):  
+def BetterBWMatchingAux(FirstOccurrence, LastColumn, Pattern):  
   top = 0 # top <- 0
   bottom = len(LastColumn)-1 # bottom <- |LastColumn| - 1
   while top <= bottom : 
@@ -43,11 +31,11 @@ def BetterBWMatchingAux(FirstColumn, LastColumn, Pattern, LastToFirst):
       Pattern = Pattern[:-1] # remove last letter from Pattern      
       # if positions from top to bottom in LastColumn contain an occurrence of symbol
       check = LastColumn[top:bottom+1]
-      if symbol in check:
-        tix = top+check.index(symbol)   #topIndex <- first position where symbol occurs among positions where symbol occurs from top to bottom in LastColumn
-        bix = top+rindex(check,symbol)  #bottomIndex <- last position of symbol among positions from top to bottom in LastColumn
-        top = LastToFirst[tix]    #top <- LastToFirst(topIndex)
-        bottom = LastToFirst[bix] #bottom <- LastToFirst(bottomIndex)
+      if symbol in check:        
+        # top <- FirstOccurrence(symbol) + Countsymbol(top, LastColumn)
+        top = FirstOccurrence[symbol] + Countsymbol(symbol, top, LastColumn) 
+        # bottom <- FirstOccurrence(symbol) + Countsymbol(bottom + 1, LastColumn) - 1
+        bottom = FirstOccurrence[symbol] + Countsymbol(symbol, bottom+1, LastColumn)-1 
       else :
         return 0
     else :
@@ -57,13 +45,11 @@ def rindex(lst, item):
   rlst = list(reversed(lst))  
   return len(lst) - rlst.index(item) - 1
       
-def BetterBWMatching(LastColumn, patterns):
-  FirstColumn = sorted(LastColumn)
-  LastToFirst = Last2FirstColumn(LastColumn)
+def BetterBWMatching(LastColumn, patterns):  
+  FirstOccurrence = FirstOccurrenceColumn(LastColumn)  
   matches={}
   for pattern in patterns:
-    matches[pattern] = BetterBWMatchingAux(FirstColumn, LastColumn, pattern, LastToFirst)
-    
+    matches[pattern] = BetterBWMatchingAux(FirstOccurrence, LastColumn, pattern)    
   return matches
 
 def main_BetterBWMatching(myfile):    
