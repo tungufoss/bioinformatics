@@ -70,16 +70,15 @@ def FirstLastPropertyFill(Mrow,FirstColumn,LastColumn,N):
   return Mrow
 
 def FirstLastPropertyMatch(pattern,FirstColumn,LastColumn,row,N):
-  org = '{}-{}'.format(row, pattern)
-  iter=0
-  while len(pattern)>0:
-    symbol = pattern[0]
-    pattern = pattern[1:]  
-    row = LastColumn.index(FirstColumn[row])
-    #print org,'#{}:\t{}=={} \t({})'.format(iter, symbol, FirstColumn[row], pattern)
-    if symbol != FirstColumn[row][0] : return False    
-    iter+=1
-  return True 
+  symbol = pattern[-1]
+  pattern = pattern[:-1]
+  if symbol != FirstColumn[row][0] : return False      
+  while len(pattern)>0:    
+    symbol = pattern[-1]
+    pattern = pattern[:-1]
+    if symbol != LastColumn[row][0] : return False
+    row = FirstColumn.index(LastColumn[row])  
+  return True     
   
 def TextMatches(text, patterns):  
   matches = {}
@@ -89,17 +88,19 @@ def TextMatches(text, patterns):
 
 def BWMatchingAux(pattern, FirstColumn, LastColumn):
   N = len(FirstColumn)
-  nMatches = 0
-  for i in range(N):
+  nMatches = 0    
+  for i in range(1,N): # first row is '$'    
+    if pattern[-1] > FirstColumn[i][0] : continue
+    if pattern[-1] < FirstColumn[i][0] : break     
     if FirstLastPropertyMatch(pattern,FirstColumn,LastColumn,i,N) : 
-      nMatches+=1
+      nMatches+=1  
   return nMatches
   
 def BWMatching(transform, patterns):
-  FirstColumn, LastColumn = FirstLastColumns(transform)  
+  FirstColumn, LastColumn = FirstLastColumns(transform)    
   matches = {}
   for pattern in patterns:   
-    matches[pattern] = BWMatchingAux(pattern, FirstColumn, LastColumn)    
+    matches[pattern] = BWMatchingAux(pattern, FirstColumn, LastColumn)        
   return matches 
   
 def main_SuffixArrayConstruction(myfile):
@@ -151,9 +152,8 @@ def main_BWMatching(myfile):
     transform = inFile.readline().strip()
     patterns = [x for x in inFile.readline().strip().split(' ')]
   
-  # text = InvBurrowsWheelerTransformConstruction(transform)
-  # matches = TextMatches(text, patterns)
-  
+  #text = InvBurrowsWheelerTransformConstruction(transform)
+  #matches = TextMatches(text, patterns)
   matches = BWMatching(transform, patterns)
   
   with open(outputFile, 'w') as outFile:        
