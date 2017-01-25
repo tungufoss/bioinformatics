@@ -63,6 +63,28 @@ def BetterBWMatchingAux(FirstOccurrence, LastColumn, Pattern, CountSymbols, Symb
     else :
       return range(top,bottom+1) # bottom - top + 1
 
+def ApproxFirstLastPropertyMatch(LastColumn, FirstColumn, Last2First, pattern, row, d):
+  mismatches = 0
+  symbol = pattern[-1]
+  pattern = pattern[:-1]
+  
+  if symbol != FirstColumn[row] : 
+    mismatches += 1
+  
+  while len(pattern)>0:
+    symbol = pattern[-1]
+    pattern = pattern[:-1]
+    next_char = LastColumn[row]
+    if next_char == '$' : 
+      return False     
+    if symbol != next_char : 
+      mismatches += 1    
+    if mismatches > d : 
+      return False      
+    row = Last2First[row]
+
+  return mismatches <= d
+
 def SuffixArrayVal(LastColumn, Last2First, row):    
   for ix in range(len(LastColumn)) :
     if LastColumn[row] == '$': break 
@@ -78,6 +100,32 @@ def BetterBWMatching(LastColumn, patterns):
     rows = BetterBWMatchingAux(FirstOccurrence, LastColumn, pattern, CountSymbols, Symbols)
     matches[pattern] = [SuffixArrayVal(LastColumn, L2F, i) for i in rows]
     
+  return matches
+    
+def ApproxBWMatching(LastColumn, patterns, d):    
+  FirstOccurrence = FirstOccurrenceColumn(LastColumn)  
+  CountSymbols, Symbols = CountArray(LastColumn)
+  L2F = Last2FirstColumn(LastColumn)
+  FirstColumn = sorted(LastColumn)
+  N = len(LastColumn)
+  matches={}
+  for pattern in patterns:
+    '''
+    n = len(pattern)    
+    k = n/(d+1)
+    seeds = [pattern[i*k:(i+1)*k] for i in range(d+1)]
+    seeds[-1] += pattern[(d+1)*k:n]        
+    for seed in seeds:
+      # check exact match for each seed
+      seed_range = BetterBWMatchingAux(FirstOccurrence, LastColumn, seed, CountSymbols, Symbols)      
+      if len(seed_range) == 0 : continue      
+      print '{}->{} {}'.format(pattern,seeds, seed)
+    '''
+    rows = []
+    for row in range(N):
+      if ApproxFirstLastPropertyMatch(LastColumn, FirstColumn, L2F, pattern, row, d) :
+        rows.append(row)          
+    matches[pattern] = [SuffixArrayVal(LastColumn, L2F, i)-len(pattern)+1 for i in rows]   
   return matches
     
 def main_BetterBWMatching(myfile):    
@@ -119,9 +167,34 @@ def main_MultiplePatternMatching(myfile):
     outFile.write(txt)  
     print txt    
 
+def main_MultipleApproxPatternMatching(myfile):    
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:        
+    text = inFile.readline().strip()
+    patterns = [x for x in inFile.readline().strip().split(' ')]
+    d = int(inFile.readline().strip())      
+  
+  if text[-1] != '$' :
+    text += '$'
+  
+  transform = BurrowsWheelerTransformConstruction(text)
+  matches = ApproxBWMatching(transform, patterns, d)
+    
+  with open(outputFile, 'w') as outFile:
+    indices = []
+    for pattern in patterns:
+      indices += matches[pattern]  
+    txt = ' '.join([str(ix) for ix in sorted(indices)])
+    outFile.write(txt)    
+    print txt
+    
 '''    
 main_BetterBWMatching('sample_BetterBWMatching')
 main_BetterBWMatching('dataset_301_7')
-'''
 main_MultiplePatternMatching('sample_MultiplePatternMatching')
 main_MultiplePatternMatching('dataset_303_4')
+'''
+main_MultipleApproxPatternMatching('sample_MultipleApproxPatternMatching')
+main_MultipleApproxPatternMatching('dataset_304_6')
