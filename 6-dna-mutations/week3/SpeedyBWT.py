@@ -26,10 +26,13 @@ C = 100 # only store the Count arrays when i is divisible by C, where C is a con
 def CountArray(LastColumn):
   symbols = sorted(list(set(LastColumn)))
   N = len(LastColumn)  
-  cnts = {}  # these arrays are called checkpoint arrays.   
-  for i in range(0,N,C):
-    cnts[i] = [Countsymbol(symbol, i, LastColumn) for symbol in symbols]
-    #print '{}\t{}\t{}'.format(i,LastColumn[i],cnts[i])
+  K = len(symbols)
+  cnts = {}  # these arrays are called checkpoint arrays.  
+  cnts[0] = [0]*K  
+  for i in range(C,N,C):    
+    tmp = [LastColumn[i-C:i].count(symbol) for symbol in symbols]
+    cnts[i] = [cnts[i-C][j]+tmp[j] for j in range(K)]
+    
   return cnts, symbols
   
 def Countsymbol2(symbol, i, LastColumn, CountSymbols, Symbols):  
@@ -56,20 +59,25 @@ def BetterBWMatchingAux(FirstOccurrence, LastColumn, Pattern, CountSymbols, Symb
         # bottom <- FirstOccurrence(symbol) + Countsymbol(bottom + 1, LastColumn) - 1
         bottom = FirstOccurrence[symbol] + Countsymbol2(symbol, bottom+1, LastColumn, CountSymbols, Symbols) - 1 
       else :
-        return 0
+        return []
     else :
-      return bottom - top + 1   
+      return range(top,bottom+1) # bottom - top + 1
 
-def rindex(lst, item):  
-  rlst = list(reversed(lst))  
-  return len(lst) - rlst.index(item) - 1
-      
+def SuffixArrayVal(LastColumn, Last2First, row):    
+  for ix in range(len(LastColumn)) :
+    if LastColumn[row] == '$': break 
+    row = Last2First[row]
+  return ix
+  
 def BetterBWMatching(LastColumn, patterns):  
   FirstOccurrence = FirstOccurrenceColumn(LastColumn)  
   CountSymbols, Symbols = CountArray(LastColumn)
+  L2F = Last2FirstColumn(LastColumn)
   matches={}
   for pattern in patterns:
-    matches[pattern] = BetterBWMatchingAux(FirstOccurrence, LastColumn, pattern, CountSymbols, Symbols)    
+    rows = BetterBWMatchingAux(FirstOccurrence, LastColumn, pattern, CountSymbols, Symbols)
+    matches[pattern] = [SuffixArrayVal(LastColumn, L2F, i) for i in rows]
+    
   return matches
     
 def main_BetterBWMatching(myfile):    
@@ -83,9 +91,37 @@ def main_BetterBWMatching(myfile):
   matches = BetterBWMatching(transform, patterns)
     
   with open(outputFile, 'w') as outFile:        
-    txt = ' '.join([str(matches[pattern]) for pattern in patterns])
+    txt = ' '.join([str(len(matches[pattern])) for pattern in patterns])
     outFile.write(txt)  
     print txt    
 
+def main_MultiplePatternMatching(myfile):    
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:        
+    text = inFile.readline().strip()
+    patterns=[]
+    for line in inFile :
+      patterns.append(line.strip())
+  
+  if text[-1] != '$' :
+    text += '$'
+  
+  transform = BurrowsWheelerTransformConstruction(text)
+  matches = BetterBWMatching(transform, patterns)
+    
+  with open(outputFile, 'w') as outFile:
+    indices = []
+    for pattern in patterns:
+      indices += matches[pattern]  
+    txt = ' '.join([str(ix) for ix in sorted(indices)])
+    outFile.write(txt)  
+    print txt    
+
+'''    
 main_BetterBWMatching('sample_BetterBWMatching')
-main_BetterBWMatching('dataset_301_7')    
+main_BetterBWMatching('dataset_301_7')
+'''
+main_MultiplePatternMatching('sample_MultiplePatternMatching')
+main_MultiplePatternMatching('dataset_303_4')
