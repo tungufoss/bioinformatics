@@ -245,7 +245,39 @@ def main_PartialSuffixArr(myfile):
     txt = '\n'.join(['{},{}'.format(key,SuffixArr[key]) for key in sorted(SuffixArr)])
     outFile.write(txt)    
     print 'Answer:\n',txt
-    
+
+def main_test():
+  text = 'cocoon$'
+  LastColumn = BurrowsWheelerTransformConstruction(text)
+  SuffixArr = SuffixArray(LastColumn,1)  
+  print '\n#1\tGive the suffix array of "{}". Return your answer as a list of integers separated by spaces (e.g., 0 1 2 3 4).'.format(text)  
+  print '\t{}'.format(' '.join([str(SuffixArr[key]) for key in sorted(SuffixArr)]))
+  
+  print '\n#2\tA key feature of the Burrows-Wheeler Transform is that it transforms runs into repeats.'
+  print '\t{}'.format(True)
+  
+  text='CGTTTGCTAT$'
+  LastColumn = BurrowsWheelerTransformConstruction(text)
+  print '\n#3\tFind the Burrows-Wheeler transform of Text = {}.'.format(text)
+  print '\t{}'.format(LastColumn)
+  
+  LastColumn='TTACA$AAGTC'
+  text = InvBurrowsWheelerTransformConstruction(LastColumn)    
+  print '\n#4\tIf BWT(Text) = {}, what is Text?'.format(LastColumn)
+  print '\t{} -- sanity check: {}'.format(text, LastColumn == BurrowsWheelerTransformConstruction(text))
+  
+  print '\n#5\tWhich of the following structures did we use in this chapter to decrease memory when solving the Multiple Pattern Matching Problem with the Burrows-Wheeler transform? (Select all that apply.)'
+  print '\t[{}]\tcheckpoint arrays'.format(True)
+  print '\t[{}]\tpartial suffix arrays'.format(True)
+  print '\t[{}]\tbreakpoint graphs'.format(False)
+  print '\t[{}]\tde Bruijn graphs'.format(False)
+  
+  n = 101
+  d = 3
+  k = n/(d+1)
+  print '\n#6\tSay that you know that two strings of length n={} match with at most d={} mismatches, but you do not know what the strings are.\n\tWhat is the largest value of k such that we can guarantee that the two strings share a k-mer?'.format(n,d)  
+  print '\tk=floor(n/(d+1))={}'.format(k)
+  
 '''    
 main_BetterBWMatching('sample_BetterBWMatching')
 main_BetterBWMatching('dataset_301_7')
@@ -253,6 +285,7 @@ main_MultiplePatternMatching('sample_MultiplePatternMatching')
 main_MultiplePatternMatching('dataset_303_4')
 main_MultipleApproxPatternMatching('sample_MultipleApproxPatternMatching')
 main_MultipleApproxPatternMatching('dataset_304_6')
-'''
 main_PartialSuffixArr('sample_PartialSuffixArr')
 main_PartialSuffixArr('dataset_9809_2')
+'''
+main_test()

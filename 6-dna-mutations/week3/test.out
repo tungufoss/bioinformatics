@@ -1,0 +1,22 @@
+
+#1	Give the suffix array of "cocoon$". Return your answer as a list of integers separated by spaces (e.g., 0 1 2 3 4).
+	6 0 2 5 1 4 3
+
+#2	A key feature of the Burrows-Wheeler Transform is that it transforms runs into repeats.
+	True
+
+#3	Find the Burrows-Wheeler transform of Text = CGTTTGCTAT$.
+	TT$GTCACTTG
+
+#4	If BWT(Text) = TTACA$AAGTC, what is Text?
+	CACTTAAAGT$ -- sanity check: True
+
+#5	Which of the following structures did we use in this chapter to decrease memory when solving the Multiple Pattern Matching Problem with the Burrows-Wheeler transform? (Select all that apply.)
+	[True]	checkpoint arrays
+	[True]	partial suffix arrays
+	[False]	breakpoint graphs
+	[False]	de Bruijn graphs
+
+#6	Say that you know that two strings of length n=101 match with at most d=3 mismatches, but you do not know what the strings are.
+	What is the largest value of k such that we can guarantee that the two strings share a k-mer?
+	k=floor(n/(d+1))=25
