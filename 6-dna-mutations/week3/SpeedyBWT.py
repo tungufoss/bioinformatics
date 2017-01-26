@@ -11,12 +11,13 @@ def FirstOccurrenceColumn(LastColumn):
     FirstOccurrence[symbol] = FirstColumn.index(symbol)    
   return FirstOccurrence
 
-def Last2FirstColumn(LastColumn):
+def Last2FirstColumns(LastColumn):
   N = len(LastColumn)    
   SL = [(LastColumn[i], Countsymbol(LastColumn[i], i+1, LastColumn)) for i in range(N) ]
   SF = sorted(SL)  
   LastToFirst = [SF.index(SL[i]) for i in range(N)]  
-  return LastToFirst
+  FirstToLast = [SL.index(SF[i]) for i in range(N)]  
+  return LastToFirst, FirstToLast
 
 def Countsymbol(symbol, i, LastColumn):
   # Countsymbol(i, LastColumn) returns the number of occurrences of symbol in the first i positions of LastColumn
@@ -71,20 +72,28 @@ def ApproxFirstLastPropertyMatch(LastColumn, FirstColumn, Last2First, pattern, r
   if symbol != FirstColumn[row] : 
     mismatches += 1
   
-  while len(pattern)>0:
-    symbol = pattern[-1]
-    pattern = pattern[:-1]
-    next_char = LastColumn[row]
-    if next_char == '$' : 
-      return False     
-    if symbol != next_char : 
-      mismatches += 1    
-    if mismatches > d : 
-      return False      
-    row = Last2First[row]
-
+  mismatches = ApproxFirstLastPropertyMatchAux(pattern, LastColumn, Last2First, row, mismatches, d)
+  
   return mismatches <= d
 
+def ApproxFirstLastPropertyMatchAux(pattern, RefColumn, Convulution, row, mismatches, d, printing=False):
+  symbol=''
+  next_char=''
+  while len(pattern)>0 and mismatches <= d:
+    #if printing : print '{}+{}={}#{}\t\t at {}'.format(pattern,symbol, next_char, mismatches, row)
+    symbol = pattern[-1]
+    pattern = pattern[:-1]
+    next_char = RefColumn[row]    
+    if next_char == '$' : 
+      mismatches=d*100
+      break 
+    if symbol != next_char : 
+      mismatches += 1    
+    row = Convulution[row]
+  
+  #if printing : print '{}+{}={}#{}\t\t at {}'.format(pattern,symbol, next_char, mismatches, row)
+  return mismatches  
+  
 def SuffixArrayVal(LastColumn, Last2First, row):    
   for ix in range(len(LastColumn)) :
     if LastColumn[row] == '$': break 
@@ -94,7 +103,7 @@ def SuffixArrayVal(LastColumn, Last2First, row):
 def BetterBWMatching(LastColumn, patterns):  
   FirstOccurrence = FirstOccurrenceColumn(LastColumn)  
   CountSymbols, Symbols = CountArray(LastColumn)
-  L2F = Last2FirstColumn(LastColumn)
+  L2F, F2L = Last2FirstColumns(LastColumn)
   matches={}
   for pattern in patterns:
     rows = BetterBWMatchingAux(FirstOccurrence, LastColumn, pattern, CountSymbols, Symbols)
@@ -105,29 +114,50 @@ def BetterBWMatching(LastColumn, patterns):
 def ApproxBWMatching(LastColumn, patterns, d):    
   FirstOccurrence = FirstOccurrenceColumn(LastColumn)  
   CountSymbols, Symbols = CountArray(LastColumn)
-  L2F = Last2FirstColumn(LastColumn)
+  L2F, F2L = Last2FirstColumns(LastColumn)
   FirstColumn = sorted(LastColumn)
   N = len(LastColumn)
   matches={}
-  for pattern in patterns:
-    '''
+  
+  for pattern in patterns:    
     n = len(pattern)    
     k = n/(d+1)
     seeds = [pattern[i*k:(i+1)*k] for i in range(d+1)]
-    seeds[-1] += pattern[(d+1)*k:n]        
-    for seed in seeds:
+    seeds[-1] += pattern[(d+1)*k:n]    
+    rows = []
+    for i in range(d+1):
+      seed=seeds[i]
       # check exact match for each seed
       seed_range = BetterBWMatchingAux(FirstOccurrence, LastColumn, seed, CountSymbols, Symbols)      
       if len(seed_range) == 0 : continue      
-      print '{}->{} {}'.format(pattern,seeds, seed)
-    '''
-    rows = []
-    for row in range(N):
-      if ApproxFirstLastPropertyMatch(LastColumn, FirstColumn, L2F, pattern, row, d) :
-        rows.append(row)          
-    matches[pattern] = [SuffixArrayVal(LastColumn, L2F, i)-len(pattern)+1 for i in rows]   
-  return matches
+      bseed = pattern[0:k*i]
+      if i == d : 
+        fseed = ''
+      else :
+        fseed = pattern[k*(i+1):]
+      
+      for row in seed_range :
+        ans = SuffixArrayVal(LastColumn, L2F, ConvolveKsteps(row, L2F, len(bseed)))
+        if ans in rows : continue
+        
+        mismatches = 0        
+        if i<d :
+          frow = ConvolveKsteps(row,F2L,len(seed))          
+          mismatches = ApproxFirstLastPropertyMatchAux(list(reversed(fseed)), FirstColumn, F2L, frow, mismatches, d, True)        
+        if i>0 :    
+          mismatches = ApproxFirstLastPropertyMatchAux(list(bseed), LastColumn, L2F, row, mismatches, d, True)
+          
+        if mismatches <= d:                     
+          rows.append(ans)    
+    matches[pattern] = rows
     
+  return matches
+  
+def ConvolveKsteps(row,Convulution,K):    
+  for k in range(K):    
+    row = Convulution[row]    
+  return row
+  
 def main_BetterBWMatching(myfile):    
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -188,7 +218,7 @@ def main_MultipleApproxPatternMatching(myfile):
       indices += matches[pattern]  
     txt = ' '.join([str(ix) for ix in sorted(indices)])
     outFile.write(txt)    
-    print txt
+    print 'Answer:',txt
     
 '''    
 main_BetterBWMatching('sample_BetterBWMatching')
