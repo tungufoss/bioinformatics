@@ -93,6 +93,16 @@ def ApproxFirstLastPropertyMatchAux(pattern, RefColumn, Convulution, row, mismat
   
   #if printing : print '{}+{}={}#{}\t\t at {}'.format(pattern,symbol, next_char, mismatches, row)
   return mismatches  
+
+def SuffixArray(LastColumn,k):
+  L2F, F2L = Last2FirstColumns(LastColumn)
+  SuffixArr = {}
+  row = 0
+  for i in range(len(LastColumn)):
+    row = F2L[row]
+    if i % k == 0 : 
+      SuffixArr[row] = i    
+  return SuffixArr
   
 def SuffixArrayVal(LastColumn, Last2First, row):    
   for ix in range(len(LastColumn)) :
@@ -219,12 +229,30 @@ def main_MultipleApproxPatternMatching(myfile):
     txt = ' '.join([str(ix) for ix in sorted(indices)])
     outFile.write(txt)    
     print 'Answer:',txt
+
+def main_PartialSuffixArr(myfile):
+  inputFile = myfile + '.txt'
+  outputFile = myfile + '.out'
+  
+  with open(inputFile) as inFile:        
+    text = inFile.readline().strip()
+    k = int(inFile.readline().strip())
+  
+  LastColumn = BurrowsWheelerTransformConstruction(text)
+  SuffixArr = SuffixArray(LastColumn,k)  
+  
+  with open(outputFile, 'w') as outFile:
+    txt = '\n'.join(['{},{}'.format(key,SuffixArr[key]) for key in sorted(SuffixArr)])
+    outFile.write(txt)    
+    print 'Answer:\n',txt
     
 '''    
 main_BetterBWMatching('sample_BetterBWMatching')
 main_BetterBWMatching('dataset_301_7')
 main_MultiplePatternMatching('sample_MultiplePatternMatching')
 main_MultiplePatternMatching('dataset_303_4')
-'''
 main_MultipleApproxPatternMatching('sample_MultipleApproxPatternMatching')
 main_MultipleApproxPatternMatching('dataset_304_6')
+'''
+main_PartialSuffixArr('sample_PartialSuffixArr')
+main_PartialSuffixArr('dataset_9809_2')
