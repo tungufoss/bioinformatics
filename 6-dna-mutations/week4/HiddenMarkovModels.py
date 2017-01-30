@@ -1,31 +1,46 @@
-def ProbabilityHiddenPathProblem(Sigma, States, Transition):
+def ProbabilityHiddenPathProblem(Sigma, Transition):
   p=0.5 #  an assumption that is modeled by setting Pr(pi0 -> pi1) = 1/2, where pi0 is a "silent" initial state that does not emit any symbols.
   for i in range(1,len(Sigma)):
     p*=Transition[(Sigma[i-1],Sigma[i])]  
   return p
 
-def ProbabilityOutcomeGivenHPP(x, x_states, pi, pi_states, Emmision):
-  p = 1  
+def ProbabilityOutcomeGivenHPP(x, pi, Emission):
+  p = 1.0  
   for i in range(len(x)):
-    p*=Emmision[(pi[i],x[i])]
-  
+    p*=Emission[(pi[i],x[i])] 
   return p
-
-def ViterbiAlgorithm(x, x_states, pi_states, Transition, Emmision):  
-  # https://www.coursera.org/learn/dna-mutations/lecture/9foxL/the-viterbi-algorithm
-  prob1 = {}  
-  pi = []  
-  for i in range(len(x)) :
-    if i == 0 : 
-      for l in pi_states :
-        prob1[l] = 1 * 0.5 * Emmision[(l,x[0])]
-    else : 
-      prob0=prob1.copy()
-      for l in pi_states :
-        prob1[l] = prob0[l]*Transition[(pi[-1],l)]*Emmision[(l,x[i])]    
-    maxval = max([prob1[k] for k in pi_states])
-    maxvar = [k for k in pi_states if prob1[k] == maxval][0]    
-    pi.append(maxvar)    
+  
+def ViterbiAlgorithm(states, sequence, transition, emission):  
+  pi = []
+  print sequence
+  vcurr = {}  
+  vprev = {}
+  scurr = {}    
+  svalues = {}  
+  for i in range(len(sequence)+1):    
+    for k in states:
+      # Find the probabilility, if we are in state l, of choosing the nucleotide at position in the sequence              
+      if i == 0 :        
+        vcurr[k] = 1.0 * emission[(k,sequence[i])]        
+      elif i < len(sequence) :      
+        for l in states:
+          svalues[l] = vprev[l] * transition[(l,k)] * emission[(k,sequence[i])]        
+        scurr[k] = max(svalues, key=svalues.get)
+        vcurr[k] = max(svalues.values())
+      else : 
+        for l in states:
+          svalues[l] = vprev[l] * transition[(l,k)]
+        scurr[k] = max(svalues, key=svalues.get)
+        vcurr[k] = max(svalues.values())
+        
+    # Go through each of the rows of the matrix v (where each row represents a 
+    # position in the DNA sequence), and find out which column has the maximum 
+    # value for that row (where each column represents one state of the HMM):  
+    if i>0 : 
+      most_probable = max(vcurr, key=lambda k: vcurr[k])    
+      pi.append(scurr[most_probable])      
+    vprev=vcurr.copy()
+  
   return pi
   
 def ReadMatrix(inFile, nRows):
@@ -39,6 +54,11 @@ def ReadMatrix(inFile, nRows):
       mat[(line[0],colnames[i])]=float(line[i+1])
   return mat
 
+def PrintMatrix(mat, rownames, colnames, name='\t'):  
+  print '{}:\t{}'.format(name, '\t'.join(colnames))
+  for s in rownames:
+    print '\t{}\t{}'.format(s, '\t'.join([str(mat[(s,t)]) for t in colnames]))
+    
 def main_ProbabilityHiddenPathProblem(myfile):
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
@@ -50,7 +70,7 @@ def main_ProbabilityHiddenPathProblem(myfile):
     inFile.readline() # --------
     Transition = ReadMatrix(inFile, len(States))
   
-  prob = ProbabilityHiddenPathProblem(Sigma, States, Transition)
+  prob = ProbabilityHiddenPathProblem(Sigma, Transition)
   with open(outputFile, 'w') as outFile:    
     outFile.write(str(prob))
     print 'Probability of a Hidden Path Problem for {}: {}'.format(Sigma, prob)
@@ -69,9 +89,9 @@ def main_ProbabilityOutcomeGivenHPP(myfile):
     inFile.readline() # --------
     pi_states = inFile.readline().strip().split(' ')
     inFile.readline() # --------
-    Emmision = ReadMatrix(inFile, len(pi_states))
+    Emission = ReadMatrix(inFile, len(pi_states))
   
-  prob = ProbabilityOutcomeGivenHPP(x, x_states, pi, pi_states, Emmision)
+  prob = ProbabilityOutcomeGivenHPP(x, pi, Emission)
   with open(outputFile, 'w') as outFile:    
     outFile.write(str(prob))
     print 'Probability that an HMM will emit a {} given its hidden path {}: {}'.format(x, pi, prob)
@@ -89,11 +109,17 @@ def main_ViterbiAlgorithm(myfile):
     inFile.readline() # --------
     Transition = ReadMatrix(inFile,len(pi_states))    
     inFile.readline() # --------
-    Emmision = ReadMatrix(inFile,len(pi_states))
-    
-  pi = ViterbiAlgorithm(x, x_states, pi_states, Transition, Emmision)
+    Emission = ReadMatrix(inFile,len(pi_states))
+
+  PrintMatrix(Transition, pi_states, pi_states, 'Transition')
+  PrintMatrix(Emission, pi_states, x_states, 'Emission')
+  
+  pi = ViterbiAlgorithm(pi_states, x, Transition, Emission)
   HMM = ''.join(pi)
-  print pi
+      
+  with open(outputFile, 'w') as outFile:    
+    outFile.write(HMM)
+    print HMM
     
 '''
 main_ProbabilityHiddenPathProblem('sample_ProbabilityHiddenPathProblem')
@@ -102,5 +128,5 @@ main_ProbabilityOutcomeGivenHPP('sample_ProbabilityOutcomeGivenHPP')
 main_ProbabilityOutcomeGivenHPP('extra_ProbabilityOutcomeGivenHPP')
 main_ProbabilityOutcomeGivenHPP('dataset_11594_4')
 '''
-#main_ViterbiAlgorithm('sample_ViterbiAlgorithm')
-main_ViterbiAlgorithm('sample_crookedcasino')
+main_ViterbiAlgorithm('sample_ViterbiAlgorithm')
+main_ViterbiAlgorithm('dataset_11594_6')
