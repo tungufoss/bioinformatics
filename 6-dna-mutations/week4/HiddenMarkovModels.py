@@ -9,40 +9,37 @@ def ProbabilityOutcomeGivenHPP(x, pi, Emission):
   for i in range(len(x)):
     p*=Emission[(pi[i],x[i])] 
   return p
+
+def ViterbiAlgorithm(string, states, transition, emission):    
+  dic = {}  
+  nStates = len(states)
+  nSeq = len(string)
   
-def ViterbiAlgorithm(states, sequence, transition, emission):  
-  pi = []
-  print sequence
-  vcurr = {}  
-  vprev = {}
-  scurr = {}    
-  svalues = {}  
-  for i in range(len(sequence)+1):    
+  dic[0] = {}
+  initprob = 1.0/len(states)
+  for i in states:
+    dic[0][i] = {}
+    dic[0][i]['p'] = initprob*emission[(i,string[0])]
+    
+  for i in xrange(1,nSeq):
+    dic[i] = {}
     for k in states:
-      # Find the probabilility, if we are in state l, of choosing the nucleotide at position in the sequence              
-      if i == 0 :        
-        vcurr[k] = 1.0 * emission[(k,sequence[i])]        
-      elif i < len(sequence) :      
-        for l in states:
-          svalues[l] = vprev[l] * transition[(l,k)] * emission[(k,sequence[i])]        
-        scurr[k] = max(svalues, key=svalues.get)
-        vcurr[k] = max(svalues.values())
-      else : 
-        for l in states:
-          svalues[l] = vprev[l] * transition[(l,k)]
-        scurr[k] = max(svalues, key=svalues.get)
-        vcurr[k] = max(svalues.values())
-        
-    # Go through each of the rows of the matrix v (where each row represents a 
-    # position in the DNA sequence), and find out which column has the maximum 
-    # value for that row (where each column represents one state of the HMM):  
-    if i>0 : 
-      most_probable = max(vcurr, key=lambda k: vcurr[k])    
-      pi.append(scurr[most_probable])      
-    vprev=vcurr.copy()
+      values = [dic[i-1][l]['p']*transition[(l, k)] for l in states]
+      maxval = max(values)
+      maxvar = states[values.index(maxval)]
+      dic[i][k] = {}
+      dic[i][k]['p'] = maxval*emission[(k,string[i])]
+      dic[i][k]['pre_state'] = maxvar      
   
-  return pi
+  maxval = max([dic[nSeq-1][l]['p'] for l in states])  
+  maxvar = [l for l in states if dic[nSeq-1][l]['p']==maxval][0]
+  pi = [maxvar]
   
+  for i in reversed(range(1,nSeq)):
+    maxvar = dic[i][maxvar]['pre_state']
+    pi.append(maxvar)
+  return reversed(pi)
+   
 def ReadMatrix(inFile, nRows):
   colnames = inFile.readline().strip().split('\t')
   nCol = len(colnames)
@@ -114,7 +111,7 @@ def main_ViterbiAlgorithm(myfile):
   PrintMatrix(Transition, pi_states, pi_states, 'Transition')
   PrintMatrix(Emission, pi_states, x_states, 'Emission')
   
-  pi = ViterbiAlgorithm(pi_states, x, Transition, Emission)
+  pi = ViterbiAlgorithm(x, pi_states, Transition, Emission)    
   HMM = ''.join(pi)
       
   with open(outputFile, 'w') as outFile:    
@@ -129,4 +126,5 @@ main_ProbabilityOutcomeGivenHPP('extra_ProbabilityOutcomeGivenHPP')
 main_ProbabilityOutcomeGivenHPP('dataset_11594_4')
 '''
 main_ViterbiAlgorithm('sample_ViterbiAlgorithm')
+main_ViterbiAlgorithm('extra_ViterbiAlgorithm')
 main_ViterbiAlgorithm('dataset_11594_6')
