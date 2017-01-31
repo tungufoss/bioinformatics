@@ -14,12 +14,13 @@ def ViterbiAlgorithm(string, states, transition, emission):
   dic = {}  
   nStates = len(states)
   nSeq = len(string)
-  
+    
   dic[0] = {}
   initprob = 1.0/len(states)
   for i in states:
     dic[0][i] = {}
     dic[0][i]['p'] = initprob*emission[(i,string[0])]
+    dic[0][i]['forward_p'] = dic[0][i]['p']
     
   for i in xrange(1,nSeq):
     dic[i] = {}
@@ -29,17 +30,21 @@ def ViterbiAlgorithm(string, states, transition, emission):
       maxvar = states[values.index(maxval)]
       dic[i][k] = {}
       dic[i][k]['p'] = maxval*emission[(k,string[i])]
-      dic[i][k]['pre_state'] = maxvar      
-  
+      dic[i][k]['pre_state'] = maxvar
+      values = [dic[i-1][l]['forward_p']*transition[(l, k)]*emission[(k,string[i])] for l in states]      
+      dic[i][k]['forward_p'] = sum(values)
+        
+  forward_p = sum([dic[nSeq-1][l]['forward_p'] for l in states])
   maxval = max([dic[nSeq-1][l]['p'] for l in states])  
   maxvar = [l for l in states if dic[nSeq-1][l]['p']==maxval][0]
   pi = [maxvar]
   
   for i in reversed(range(1,nSeq)):
     maxvar = dic[i][maxvar]['pre_state']
-    pi.append(maxvar)
-  return reversed(pi)
-   
+    pi.append(maxvar)    
+    
+  return reversed(pi), forward_p
+  
 def ReadMatrix(inFile, nRows):
   colnames = inFile.readline().strip().split('\t')
   nCol = len(colnames)
@@ -93,7 +98,7 @@ def main_ProbabilityOutcomeGivenHPP(myfile):
     outFile.write(str(prob))
     print 'Probability that an HMM will emit a {} given its hidden path {}: {}'.format(x, pi, prob)
 
-def main_ViterbiAlgorithm(myfile):    
+def main_ViterbiAlgorithm(myfile, printHMM=True, printProb=False):    
   inputFile = myfile + '.txt'
   outputFile = myfile + '.out'
   
@@ -111,20 +116,27 @@ def main_ViterbiAlgorithm(myfile):
   PrintMatrix(Transition, pi_states, pi_states, 'Transition')
   PrintMatrix(Emission, pi_states, x_states, 'Emission')
   
-  pi = ViterbiAlgorithm(x, pi_states, Transition, Emission)    
-  HMM = ''.join(pi)
-      
+  pi, forward_p = ViterbiAlgorithm(x, pi_states, Transition, Emission)    
+  
   with open(outputFile, 'w') as outFile:    
-    outFile.write(HMM)
-    print HMM
-    
+    if printHMM:
+      HMM = ''.join(pi)
+      outFile.write(HMM)
+      print HMM
+    elif printProb:
+      outFile.write(str(forward_p))
+      print forward_p
+
 '''
 main_ProbabilityHiddenPathProblem('sample_ProbabilityHiddenPathProblem')
 main_ProbabilityHiddenPathProblem('dataset_11594_2')
 main_ProbabilityOutcomeGivenHPP('sample_ProbabilityOutcomeGivenHPP')
 main_ProbabilityOutcomeGivenHPP('extra_ProbabilityOutcomeGivenHPP')
 main_ProbabilityOutcomeGivenHPP('dataset_11594_4')
-'''
 main_ViterbiAlgorithm('sample_ViterbiAlgorithm')
 main_ViterbiAlgorithm('extra_ViterbiAlgorithm')
 main_ViterbiAlgorithm('dataset_11594_6')
+'''
+main_ViterbiAlgorithm('sample_OutcomeLikelihood',False,True)
+main_ViterbiAlgorithm('extra_OutcomeLikelihood',False,True)
+main_ViterbiAlgorithm('dataset_11594_8',False,True)
